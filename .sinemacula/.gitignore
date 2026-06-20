@@ -1,0 +1,28 @@
+# .sinemacula/ tracking policy (allowlist v1)
+#
+# Managed by /build:init and the session:start hook. Do NOT remove the
+# `*` catch-all or the sentinel comment above — the session-start sync hook
+# uses them to detect this format and apply migrations from older versions.
+#
+# Why allowlist? Plugins write into .sinemacula/ automatically (workflow
+# state, audit reports, model-routing snapshots, etc.). Deny-by-default
+# means future plugin updates can never accidentally commit new artefacts;
+# only the explicit allowlist below gets through.
+#
+# To track an additional file, add an explicit `!<path>` allow-entry below
+# (and commit it). To opt a directory out of tracking, remove its
+# `!<path>` entry. Never edit the `*` line.
+
+# Deny everything by default
+*
+
+# Allow team-shared policy + config (always tracked)
+!.gitignore
+!config.toml
+!release-allowlist.json
+
+# Allow visual-regression baselines — shared so every engineer compares
+# against the same reference set. Remove these two lines to make baselines
+# per-machine.
+!browser-qa/
+!browser-qa/**

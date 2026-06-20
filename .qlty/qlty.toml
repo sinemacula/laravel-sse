@@ -1,0 +1,106 @@
+# Reference: https://qlty.sh/d/qlty-toml
+#
+# Code-quality configuration for both the Qlty CLI and Qlty Cloud. Lint and
+# format rules come from the shared sinemacula/coding-standards source; this
+# file wires that source in and selects the plugins relevant to a PHP
+# repository.
+config_version = "0"
+
+exclude_patterns = [
+    "*_min.*",
+    "*-min.*",
+    "*.min.*",
+    "**/build/**",
+    "**/cache/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/vendor/**",
+    ".qlty/configs/**",
+    ".sinemacula/**",
+]
+
+test_patterns = [
+    "**/test/**",
+    "**/tests/**",
+    "**/spec/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*_test.*",
+    "**/*_spec.*",
+    "**/test_*.*",
+    "**/spec_*.*",
+]
+
+[runtimes.enabled]
+php = "8.3"
+
+[smells]
+mode = "comment"
+
+[[source]]
+name = "default"
+default = true
+
+[[source]]
+name = "sinemacula"
+repository = "https://github.com/sinemacula/coding-standards"
+tag = "v1.2.0"
+
+[[plugin]]
+name = "actionlint"
+
+[[plugin]]
+name = "editorconfig-checker"
+
+[[plugin]]
+name = "markdownlint"
+mode = "comment"
+
+[[plugin]]
+name = "osv-scanner"
+
+[[plugin]]
+name = "php-codesniffer"
+version = "4.0.1"
+mode = "comment"
+package_file = "composer.json"
+package_filters = ["slevomat", "dealerdirect", "sinemacula"]
+
+# Pinned to the last php-cs-fixer release whose symfony/console stays on the 7.x
+# line. 3.90+ pulls symfony/console 8 (requires PHP 8.4.1 and uses 8.4-only
+# syntax), which qlty's PHP 8.3 runner cannot parse. Bump once the runner ships
+# PHP 8.4.
+[[plugin]]
+name = "php-cs-fixer"
+package_file = "composer.json"
+package_filters = ["sinemacula"]
+version = "3.89.0"
+
+[[plugin]]
+name = "phpstan"
+version = "2.1.46"
+package_file = "composer.json"
+
+[[plugin]]
+name = "radarlint-php"
+mode = "comment"
+
+[[plugin]]
+name = "trivy"
+drivers = [
+    "config",
+    "fs-vuln",
+]
+
+[[plugin]]
+name = "trufflehog"
+
+[[plugin]]
+name = "yamllint"
+
+# Skip radarlint smell analysis on the test tree — reused fixture literals and
+# multi-branch data providers trip duplication/return-count rules without value.
+[[exclude]]
+plugins = ["radarlint-php"]
+file_patterns = ["tests/**"]

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ruleset name="Project">
+
+    <rule ref="SineMacula"/>
+
+    <file>src</file>
+    <file>benchmarks</file>
+    <file>tests</file>
+
+</ruleset>
