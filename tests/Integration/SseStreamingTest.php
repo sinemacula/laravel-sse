@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Tests\Integration;
 
 use Illuminate\Support\Facades\Route;
@@ -24,7 +26,7 @@ use Tests\TestCase;
  * @internal
  */
 #[CoversClass(EventStream::class)]
-class SseStreamingTest extends TestCase
+final class SseStreamingTest extends TestCase
 {
     /** @var string The SSE endpoint under test. */
     private const string SSE_URI = '/events';
@@ -44,12 +46,12 @@ class SseStreamingTest extends TestCase
         FunctionOverrides::set('flush', fn () => null);
         FunctionOverrides::set('ob_flush', fn () => null);
         FunctionOverrides::set('ob_get_level', fn () => 0);
-        FunctionOverrides::set('sleep', fn (int $_s) => 0);
+        FunctionOverrides::set('sleep', fn () => 0);
 
-        $abort_count = 0;
+        $abortCount = 0;
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abort_count): int {
-            return ++$abort_count >= 2 ? 1 : 0;
+        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
+            return ++$abortCount >= 2 ? 1 : 0;
         });
     }
 
@@ -65,18 +67,18 @@ class SseStreamingTest extends TestCase
 
         $response->assertOk();
 
-        static::assertInstanceOf(StreamedResponse::class, $response->baseResponse);
+        self::assertInstanceOf(StreamedResponse::class, $response->baseResponse);
 
-        $content_type = (string) $response->baseResponse->headers->get('Content-Type');
+        $contentType = (string) $response->baseResponse->headers->get('Content-Type');
 
-        static::assertStringStartsWith('text/event-stream', $content_type);
+        self::assertStringStartsWith('text/event-stream', $contentType);
 
-        $cache_control = (string) $response->baseResponse->headers->get('Cache-Control');
+        $cacheControl = (string) $response->baseResponse->headers->get('Cache-Control');
 
-        static::assertStringContainsString('no-cache', $cache_control);
-        static::assertStringContainsString('no-transform', $cache_control);
-        static::assertSame('keep-alive', $response->baseResponse->headers->get('Connection'));
-        static::assertSame('no', $response->baseResponse->headers->get('X-Accel-Buffering'));
+        self::assertStringContainsString('no-cache', $cacheControl);
+        self::assertStringContainsString('no-transform', $cacheControl);
+        self::assertSame('keep-alive', $response->baseResponse->headers->get('Connection'));
+        self::assertSame('no', $response->baseResponse->headers->get('X-Accel-Buffering'));
     }
 
     /**
@@ -94,6 +96,6 @@ class SseStreamingTest extends TestCase
 
         $content = $response->streamedContent();
 
-        static::assertSame(":\n\nevent: update\ndata: {\"tick\":1}\n\n", $content);
+        self::assertSame(":\n\nevent: update\ndata: {\"tick\":1}\n\n", $content);
     }
 }

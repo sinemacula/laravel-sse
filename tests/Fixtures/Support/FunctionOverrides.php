@@ -1,6 +1,13 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Tests\Fixtures\Support;
+
+// The override registry holds arbitrary callables, so its callable type
+// signatures are necessarily mixed; phpstan requires the signature while the
+// standard forbids mixed, so relax the latter for this generic registry.
+// phpcs:disable SlevomatCodingStandard.TypeHints.DisallowMixedTypeHint
 
 /**
  * Static registry for namespace-scoped PHP function overrides.

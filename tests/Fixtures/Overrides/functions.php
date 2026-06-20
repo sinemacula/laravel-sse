@@ -1,16 +1,15 @@
 <?php
 
-/**
- * Namespace-scoped function overrides for SSE streaming tests.
- *
- * These functions intercept calls made from within the SineMacula\Sse
- * namespace so that tests can control connection_aborted(), sleep(),
- * flush(), ob_flush(), and ob_get_level() without affecting global state.
- */
+declare(strict_types = 1);
 
 namespace SineMacula\Sse;
 
 use Tests\Fixtures\Support\FunctionOverrides;
+
+// These overrides intentionally shadow snake_case PHP built-ins, which the
+// SineMacula.ValidGlobalFunctionName rule requires; silence the conflicting
+// Squiz camelCase check for this fixture only.
+// phpcs:disable Squiz.NamingConventions.ValidFunctionName.NotCamelCaps
 
 /**
  * Override connection_aborted() within the Sse namespace.
@@ -24,7 +23,7 @@ function connection_aborted(): int
     $override = FunctionOverrides::get('connection_aborted');
 
     if ($override !== null) {
-        /** @phpstan-ignore cast.int */
+        // @phpstan-ignore cast.int
         return (int) $override();
     }
 
@@ -42,7 +41,7 @@ function sleep(int $seconds): int
     $override = FunctionOverrides::get('sleep');
 
     if ($override !== null) {
-        /** @phpstan-ignore cast.int */
+        // @phpstan-ignore cast.int
         return (int) $override($seconds);
     }
 
@@ -97,7 +96,7 @@ function ob_get_level(): int
     $override = FunctionOverrides::get('ob_get_level');
 
     if ($override !== null) {
-        /** @phpstan-ignore cast.int */
+        // @phpstan-ignore cast.int
         return (int) $override();
     }
 

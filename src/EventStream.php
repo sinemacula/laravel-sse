@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace SineMacula\Sse;
 
+use Carbon\CarbonInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -10,6 +13,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * Owns response construction, the polling loop, heartbeat emission,
  * connection-abort detection, and error handling for Server-Sent Event
  * streams. Designed for subclass extension via protected hooks.
+ *
+ * @inheritable
  *
  * @author      Ben Carey <bdmc@sinemacula.co.uk>
  * @copyright   2026 Sine Macula Limited.
@@ -29,16 +34,12 @@ class EventStream
      * @param  int  $maxIterations
      */
     public function __construct(
-
         /** The heartbeat interval in seconds for keep-alive comments. */
         private readonly int $heartbeatInterval = 20,
-
         /** The maximum stream duration in seconds (0 = unbounded). */
         private readonly int $maxDuration = 0,
-
         /** The maximum number of poll iterations (0 = unbounded). */
         private readonly int $maxIterations = 0,
-
     ) {}
 
     /**
@@ -54,8 +55,12 @@ class EventStream
      * @param  array<string, string>  $headers
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function toResponse(callable $callback, int $interval = 1, int $status = 200, array $headers = []): StreamedResponse
-    {
+    public function toResponse(
+        callable $callback,
+        int $interval = 1,
+        int $status = 200,
+        array $headers = [],
+    ): StreamedResponse {
         $headers = array_merge($headers, [
             'Content-Type'      => 'text/event-stream',
             'Cache-Control'     => 'no-cache, no-transform',
@@ -84,7 +89,7 @@ class EventStream
      * @param  \SineMacula\Sse\Emitter  $emitter
      * @return bool
      */
-    protected function handleStreamError(\Throwable $exception, Emitter $emitter): bool
+    protected function shouldContinueAfterError(\Throwable $exception, Emitter $emitter): bool
     {
         report($exception);
         $emitter->emit('An error occurred', 'error');
@@ -116,11 +121,16 @@ class EventStream
      *
      * @SuppressWarnings("php:S1172")
      *
+     * @phpcsSuppress SlevomatCodingStandard.Functions.UnusedParameter
+     *
      * @param  \SineMacula\Sse\StreamTerminationReason  $reason
      * @return void
      */
     protected function onStreamEnd(StreamTerminationReason $reason): void {}
 
+    // The poll loop coordinates several exit conditions in one place; its
+    // cognitive complexity is inherent to that and covered by tests.
+    // phpcs:disable SlevomatCodingStandard.Complexity.Cognitive
     /**
      * Execute the SSE polling loop.
      *
@@ -142,20 +152,20 @@ class EventStream
         $streamStart        = now();
         $heartbeatTimestamp = now();
         $iterations         = 0;
-        $reason             = StreamTerminationReason::ClientDisconnect;
+        $reason             = StreamTerminationReason::CLIENT_DISCONNECT;
 
         while (true) {
 
             if (connection_aborted()) {
-                $reason = StreamTerminationReason::ClientDisconnect;
+                $reason = StreamTerminationReason::CLIENT_DISCONNECT;
                 break;
             }
 
             try {
                 $acceptsEmitter ? $callback($emitter) : $callback();
             } catch (\Throwable $exception) {
-                if (!$this->handleStreamError($exception, $emitter)) {
-                    $reason = StreamTerminationReason::Error;
+                if (!$this->shouldContinueAfterError($exception, $emitter)) {
+                    $reason = StreamTerminationReason::ERROR;
                     break;
                 }
 
@@ -175,9 +185,10 @@ class EventStream
                 break;
             }
 
-            // @phpstan-ignore-next-line if.alwaysFalse (connection state may change between the two checks per iteration)
+            // The connection can abort between the two per-iteration checks.
+            // @phpstan-ignore-next-line if.alwaysFalse
             if (connection_aborted()) {
-                $reason = StreamTerminationReason::ClientDisconnect;
+                $reason = StreamTerminationReason::CLIENT_DISCONNECT;
                 break;
             }
 
@@ -186,6 +197,7 @@ class EventStream
 
         $this->onStreamEnd($reason);
     }
+    // phpcs:enable SlevomatCodingStandard.Complexity.Cognitive
 
     /**
      * Resolve the termination reason when a configured ceiling has been
@@ -195,14 +207,14 @@ class EventStream
      * @param  int  $iterations
      * @return \SineMacula\Sse\StreamTerminationReason|null
      */
-    private function ceilingReason(\Carbon\CarbonInterface $streamStart, int $iterations): ?StreamTerminationReason
+    private function ceilingReason(CarbonInterface $streamStart, int $iterations): ?StreamTerminationReason
     {
         if ($this->maxDuration > 0 && $streamStart->diffInSeconds(now()) >= $this->maxDuration) {
-            return StreamTerminationReason::MaxDuration;
+            return StreamTerminationReason::MAX_DURATION;
         }
 
         if ($this->maxIterations > 0 && $iterations >= $this->maxIterations) {
-            return StreamTerminationReason::MaxIterations;
+            return StreamTerminationReason::MAX_ITERATIONS;
         }
 
         return null;
@@ -216,7 +228,7 @@ class EventStream
      * @param  \Carbon\CarbonInterface  $heartbeatTimestamp
      * @return \Carbon\CarbonInterface
      */
-    private function emitHeartbeatIfDue(Emitter $emitter, \Carbon\CarbonInterface $heartbeatTimestamp): \Carbon\CarbonInterface
+    private function emitHeartbeatIfDue(Emitter $emitter, CarbonInterface $heartbeatTimestamp): CarbonInterface
     {
         if ($heartbeatTimestamp->diffInSeconds(now()) >= $this->heartbeatInterval) {
             $emitter->comment();

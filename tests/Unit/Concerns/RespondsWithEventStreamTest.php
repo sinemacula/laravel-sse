@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Tests\Unit\Concerns;
 
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -23,7 +25,7 @@ use Tests\TestCase;
  * @internal
  */
 #[CoversTrait(RespondsWithEventStream::class)]
-class RespondsWithEventStreamTest extends TestCase
+final class RespondsWithEventStreamTest extends TestCase
 {
     /** @var string The SSE comment wire format used for keep-alive signals. */
     private const string SSE_COMMENT = ":\n\n";
@@ -41,7 +43,7 @@ class RespondsWithEventStreamTest extends TestCase
         FunctionOverrides::set('flush', fn () => null);
         FunctionOverrides::set('ob_flush', fn () => null);
         FunctionOverrides::set('ob_get_level', fn () => 0);
-        FunctionOverrides::set('sleep', fn (int $_s) => 0);
+        FunctionOverrides::set('sleep', fn () => 0);
         FunctionOverrides::set('connection_aborted', fn (): int => 1);
     }
 
@@ -55,8 +57,8 @@ class RespondsWithEventStreamTest extends TestCase
     {
         $response = (new RespondsWithEventStreamHarness)->stream(fn () => null);
 
-        static::assertInstanceOf(StreamedResponse::class, $response);
-        static::assertSame(200, $response->getStatusCode());
+        self::assertInstanceOf(StreamedResponse::class, $response);
+        self::assertSame(200, $response->getStatusCode());
     }
 
     /**
@@ -83,7 +85,7 @@ class RespondsWithEventStreamTest extends TestCase
             }
         };
 
-        static::assertSame([20, 0, 0], $harness->exposeSeamDefaults());
+        self::assertSame([20, 0, 0], $harness->exposeSeamDefaults());
     }
 
     /**
@@ -114,7 +116,7 @@ class RespondsWithEventStreamTest extends TestCase
         $response->sendContent();
         ob_get_clean();
 
-        static::assertSame([1], $sleepArgs);
+        self::assertSame([1], $sleepArgs);
     }
 
     /**
@@ -142,7 +144,7 @@ class RespondsWithEventStreamTest extends TestCase
         $response->sendContent();
         $output = ob_get_clean();
 
-        static::assertSame(2, substr_count((string) $output, self::SSE_COMMENT));
+        self::assertSame(2, substr_count((string) $output, self::SSE_COMMENT));
     }
 
     /**
@@ -170,7 +172,7 @@ class RespondsWithEventStreamTest extends TestCase
         $response->sendContent();
         $output = ob_get_clean();
 
-        static::assertSame(1, substr_count((string) $output, self::SSE_COMMENT));
+        self::assertSame(1, substr_count((string) $output, self::SSE_COMMENT));
     }
 
     /**
@@ -200,9 +202,9 @@ class RespondsWithEventStreamTest extends TestCase
         $response->sendContent();
         ob_get_clean();
 
-        // A ceiling of 1 (duration or iteration) would cap the loop at the first
-        // poll; the unbounded defaults let it run until the client disconnects.
-        static::assertSame(2, $polls);
+        // A ceiling of 1 (duration or iteration) would cap the loop at the
+        // first poll; the unbounded defaults run until the client disconnects.
+        self::assertSame(2, $polls);
     }
 
     /**
@@ -242,7 +244,7 @@ class RespondsWithEventStreamTest extends TestCase
         $response->sendContent();
         $output = ob_get_clean();
 
-        static::assertSame(2, substr_count((string) $output, self::SSE_COMMENT));
+        self::assertSame(2, substr_count((string) $output, self::SSE_COMMENT));
     }
 
     /**
@@ -283,7 +285,7 @@ class RespondsWithEventStreamTest extends TestCase
         $response->sendContent();
         ob_get_clean();
 
-        static::assertSame(5, $polls);
+        self::assertSame(5, $polls);
     }
 
     /**
@@ -321,7 +323,7 @@ class RespondsWithEventStreamTest extends TestCase
         $response->sendContent();
         ob_get_clean();
 
-        static::assertSame(3, $polls);
+        self::assertSame(3, $polls);
     }
 
     /**
@@ -346,6 +348,6 @@ class RespondsWithEventStreamTest extends TestCase
 
         $response = $harness->streamFromSubclass(fn () => null);
 
-        static::assertInstanceOf(StreamedResponse::class, $response);
+        self::assertInstanceOf(StreamedResponse::class, $response);
     }
 }

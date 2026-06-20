@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace SineMacula\Sse;
 
 /**
@@ -21,6 +23,8 @@ final class Emitter
      * data lines. Array data is JSON-encoded into a single string. String
      * data is split on newlines, with each line emitted as a separate
      * `data:` field per the SSE specification.
+     *
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.DisallowMixedTypeHint
      *
      * @param  array<mixed>|string  $data
      * @param  string|null  $event

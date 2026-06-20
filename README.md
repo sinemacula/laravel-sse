@@ -31,8 +31,8 @@ A few rules hold across the surface:
   behaviour you want under php-fpm. Set `maxDuration` or `maxIterations` to make a stream self-terminate gracefully (see
   [Running SSE under Octane](#running-sse-under-octane)).
 - **Extensible through protected hooks.** Subclass `EventStream` and override `onStreamStart()`, `onStreamEnd()`, or
-  `handleStreamError()` to customise lifecycle behaviour. `onStreamEnd()` receives a `StreamTerminationReason` so you can
-  tell a graceful ceiling-reached close from a client disconnect or an error.
+  `shouldContinueAfterError()` to customise lifecycle behaviour. `onStreamEnd()` receives a `StreamTerminationReason`
+  so you can tell a graceful ceiling-reached close from a client disconnect or an error.
 - **No framework coupling beyond Laravel's helpers.** The trait accepts a plain integer HTTP status, so a consuming
   controller is not forced to depend on any particular enum or base-controller library.
 
@@ -108,12 +108,12 @@ class MyStream extends EventStream
 
     protected function onStreamEnd(StreamTerminationReason $reason): void
     {
-        if ($reason === StreamTerminationReason::MaxDuration) {
+        if ($reason === StreamTerminationReason::MAX_DURATION) {
             // the configured ceiling was reached; the worker is being released
         }
     }
 
-    protected function handleStreamError(\Throwable $exception, Emitter $emitter): bool
+    protected function shouldContinueAfterError(\Throwable $exception, Emitter $emitter): bool
     {
         // return true to continue the loop, false to stop
         return false;
@@ -149,11 +149,11 @@ indefinitely, and enough concurrent connections exhaust the pool and starve unre
 | `toResponse(callable $callback, int $interval = 1, int $status = 200, array $headers = [])` | Build and return a `StreamedResponse` with SSE headers and polling loop.                                                                  |
 | `onStreamStart(Emitter $emitter)` _(protected)_                                             | Called once before the polling loop; emits the initial keep-alive by default.                                                             |
 | `onStreamEnd(StreamTerminationReason $reason)` _(protected)_                                | Called after the loop exits, with the reason it ended; empty by default.                                                                  |
-| `handleStreamError(\Throwable, Emitter)` _(protected)_                                      | Called on callback exception; returns `false` to stop, `true` to continue.                                                                |
+| `shouldContinueAfterError(\Throwable, Emitter)` _(protected)_                               | Called on callback exception; returns `false` to stop, `true` to continue.                                                                |
 
 ### `StreamTerminationReason`
 
-A string-backed enum passed to `onStreamEnd()`: `ClientDisconnect`, `Error`, `MaxDuration`, `MaxIterations`.
+A string-backed enum passed to `onStreamEnd()`: `CLIENT_DISCONNECT`, `ERROR`, `MAX_DURATION`, `MAX_ITERATIONS`.
 
 ### `Emitter`
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace SineMacula\Sse\Concerns;
 
 use SineMacula\Sse\EventStream;
@@ -61,9 +63,9 @@ trait RespondsWithEventStream
      * Respond with an SSE event stream.
      *
      * Delegates to EventStream for response construction, the polling loop,
-     * heartbeat emission, and error handling. Override {@see maxStreamDuration()}
-     * or {@see maxStreamIterations()} to bound the stream so it self-terminates
-     * and releases its worker.
+     * heartbeat emission, and error handling. Override
+     * {@see maxStreamDuration()} or {@see maxStreamIterations()} to bound the
+     * stream so it self-terminates and releases its worker.
      *
      * @param  callable(): void|callable(\SineMacula\Sse\Emitter): void  $callback
      * @param  int  $interval
@@ -71,8 +73,12 @@ trait RespondsWithEventStream
      * @param  array<string, string>  $headers
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    protected function respondWithEventStream(callable $callback, int $interval = 1, int $status = 200, array $headers = []): StreamedResponse
-    {
+    protected function respondWithEventStream(
+        callable $callback,
+        int $interval = 1,
+        int $status = 200,
+        array $headers = [],
+    ): StreamedResponse {
         return (new EventStream($this->heartbeatInterval(), $this->maxStreamDuration(), $this->maxStreamIterations()))
             ->toResponse($callback, $interval, $status, $headers);
     }

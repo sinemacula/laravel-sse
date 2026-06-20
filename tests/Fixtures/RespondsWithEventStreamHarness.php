@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Tests\Fixtures;
 
 use SineMacula\Sse\Concerns\RespondsWithEventStream;
@@ -12,6 +14,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * trait's protected seam methods are crossed at a real inheritance boundary. A
  * protected-to-private mutation on any seam then becomes observable: a private
  * trait method is neither overridable by, nor callable from, a subclass.
+ *
+ * @inheritable
  *
  * @author      Ben Carey <bdmc@sinemacula.co.uk>
  * @copyright   2026 Sine Macula Limited.

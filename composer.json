@@ -37,7 +37,7 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^12.5",
-        "sinemacula/coding-standards": "^1.0",
+        "sinemacula/coding-standards": "^1.3.1",
         "slevomat/coding-standard": "^8.28",
         "squizlabs/php_codesniffer": "^4.0"
     },
