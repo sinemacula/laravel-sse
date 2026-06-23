@@ -45,7 +45,7 @@ default = true
 [[source]]
 name = "sinemacula"
 repository = "https://github.com/sinemacula/coding-standards"
-tag = "v1.3.1"
+tag = "v1.7.2"
 
 [[plugin]]
 name = "actionlint"
@@ -66,6 +66,14 @@ version = "4.0.1"
 mode = "comment"
 package_file = "composer.json"
 package_filters = ["slevomat", "dealerdirect", "sinemacula"]
+
+# php-codesniffer 4.x exits with code 3 when it finds issues (slevomat >= 8.29
+# forces phpcs ^4.0.1). qlty's default success_codes = [0, 1] treats that as a
+# hard failure and silently drops every phpcs finding (false green), so the
+# exit codes must be accepted here. Must live in this consumer config, not the
+# shared source.toml.
+[plugins.definitions.php-codesniffer.drivers.lint]
+success_codes = [0, 1, 2, 3]
 
 # Pinned to the last php-cs-fixer release whose symfony/console stays on the 7.x
 # line. 3.90+ pulls symfony/console 8 (requires PHP 8.4.1 and uses 8.4-only
