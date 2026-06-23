@@ -1,0 +1,37 @@
+{
+    $schema: "./vendor/infection/infection/resources/schema.json",
+    source: {
+        directories: [
+            "src"
+        ]
+    },
+    logs: {
+        summary: "build/infection-summary.log",
+        text: "build/infection.log"
+    },
+    phpUnit: {
+        configDir: ".",
+        customPath: "vendor/bin/phpunit"
+    },
+    timeout: 15,
+    mutators: {
+        "@default": true,
+        // Every ceiling guard is `> 0`, so a negative default is unbounded
+        // exactly as 0 is: decrementing a 0 default to -1 is an equivalent
+        // mutant that no test can distinguish.
+        DecrementInteger: {
+            ignore: [
+                "SineMacula\\Sse\\EventStream::__construct",
+                "SineMacula\\Sse\\Concerns\\RespondsWithEventStream::maxStreamDuration",
+                "SineMacula\\Sse\\Concerns\\RespondsWithEventStream::maxStreamIterations"
+            ]
+        },
+        // preg_split() with a static, valid pattern never returns false, so the
+        // (array) cast is defensive type-narrowing that cannot alter behaviour.
+        CastArray: {
+            ignore: [
+                "SineMacula\\Sse\\Emitter::emit"
+            ]
+        }
+    }
+}

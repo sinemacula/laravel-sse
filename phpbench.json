@@ -1,0 +1,14 @@
+{
+    "$schema": "./vendor/phpbench/phpbench/phpbench.schema.json",
+    "runner.bootstrap": "vendor/autoload.php",
+    "runner.path": "benchmarks",
+    "runner.time_unit": "microseconds",
+    "runner.retry_threshold": 5,
+    "storage.xml_storage_path": "build/phpbench",
+    "report.outputs": {
+        "ci-summary": {
+            "renderer": "console",
+            "title": "PHPBench CI Summary"
+        }
+    }
+}

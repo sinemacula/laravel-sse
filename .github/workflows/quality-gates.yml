@@ -1,0 +1,124 @@
+# ==============================================================================
+# QUALITY GATES
+# ==============================================================================
+name: Quality Gates
+
+# ==============================================================================
+# TRIGGERS
+# ==============================================================================
+on:
+    push:
+        branches: [ master ]
+    pull_request:
+        types: [ opened, synchronize, reopened, ready_for_review ]
+    schedule:
+        -   cron: 0 7 * * 1
+    workflow_dispatch:
+
+# ==============================================================================
+# CONCURRENCY
+# ==============================================================================
+concurrency:
+    group: quality-gates-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+# ==============================================================================
+# PERMISSIONS
+# ==============================================================================
+permissions:
+    contents: read
+
+# ==============================================================================
+# DEFAULTS
+# ==============================================================================
+defaults:
+    run:
+        shell: bash
+
+jobs:
+
+    # ==========================================================================
+    # JOB: SCOPED MUTATION GATE (PR + PUSH)
+    # ==========================================================================
+    mutation:
+        if: ${{ github.event_name != 'schedule' }}
+        name: Mutation / PHP 8.3
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v5
+                with:
+                    persist-credentials: false
+
+            -   name: Setup PHP
+                uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
+                with:
+                    php-version: 8.3
+
+            -   name: Scoped mutation gate
+                run: composer test:mutation
+
+    # ==========================================================================
+    # JOB: FULL MUTATION SUITE (SCHEDULED + MANUAL)
+    # ==========================================================================
+    mutation-full:
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        continue-on-error: true
+        name: Mutation Full / PHP 8.3
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v5
+                with:
+                    persist-credentials: false
+
+            -   name: Setup PHP
+                uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
+                with:
+                    php-version: 8.3
+
+            -   name: Full mutation suite
+                run: composer test:mutation:full
+
+    # ==========================================================================
+    # JOB: BENCHMARKS (SCHEDULED + MANUAL)
+    # ==========================================================================
+    benchmarks:
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        continue-on-error: true
+        name: Benchmarks / PHP 8.3
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v5
+                with:
+                    persist-credentials: false
+
+            -   name: Setup PHP
+                uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
+                with:
+                    php-version: 8.3
+
+            -   name: Run PHPBench suite
+                run: |
+                    mkdir -p build
+                    XDEBUG_MODE=off composer bench:ci 2>&1 | tee build/phpbench-console.txt
+
+            -   name: Render benchmark summary
+                if: always()
+                run: |
+                    echo '## PHPBench Summary' >> "$GITHUB_STEP_SUMMARY"
+                    echo '```' >> "$GITHUB_STEP_SUMMARY"
+                    cat build/phpbench-console.txt >> "$GITHUB_STEP_SUMMARY"
+                    echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+            -   name: Upload benchmark artifact
+                if: always()
+                uses: actions/upload-artifact@v7
+                with:
+                    name: phpbench-report
+                    path: build/phpbench.xml
+                    if-no-files-found: warn
