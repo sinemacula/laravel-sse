@@ -50,7 +50,7 @@ trait RespondsWithEventStream
      * The maximum number of poll iterations (0 = unbounded).
      *
      * Override as an optional secondary guard alongside
-     * {@see maxStreamDuration()} .
+     * {@see maxStreamDuration()}.
      *
      * @return int
      */
