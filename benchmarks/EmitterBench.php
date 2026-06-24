@@ -10,10 +10,10 @@ use SineMacula\Sse\Emitter;
 /**
  * Benchmarks for the SSE emitter hot paths.
  *
- * The emitter is the only CPU-bound surface in the package - it formats
- * every event written to the wire, so its per-call cost compounds across a
- * stream. Output is captured and discarded so the wire writes do not leak
- * into the benchmark runner.
+ * The emitter is the only CPU-bound surface in the package - it formats every
+ * event written to the wire, so its per-call cost compounds across a stream.
+ * Output is captured and discarded so the wire writes do not leak into the
+ * benchmark runner.
  *
  * @author      Ben Carey <bdmc@sinemacula.co.uk>
  * @copyright   2026 Sine Macula Limited.

@@ -48,8 +48,8 @@ final class RespondsWithEventStreamTest extends TestCase
     }
 
     /**
-     * Test that the trait returns a StreamedResponse carrying its default
-     * 200 status from a using class.
+     * Test that the trait returns a StreamedResponse carrying its default 200
+     * status from a using class.
      *
      * @return void
      */

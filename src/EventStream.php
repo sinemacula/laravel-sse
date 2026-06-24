@@ -12,8 +12,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * SSE transport lifecycle manager.
  *
  * Owns response construction, the polling loop, heartbeat emission,
- * connection-abort detection, and error handling for Server-Sent Event
- * streams. Designed for subclass extension via protected hooks.
+ * connection-abort detection, and error handling for Server-Sent Event streams.
+ * Designed for subclass extension via protected hooks.
  *
  * @inheritable
  *
@@ -50,8 +50,8 @@ class EventStream
      * Build an SSE streamed response.
      *
      * Constructs a StreamedResponse with the required SSE headers and a
-     * streaming closure that runs the polling loop. Callback arity is
-     * detected via reflection to determine whether the emitter is passed.
+     * streaming closure that runs the polling loop. Callback arity is detected
+     * via reflection to determine whether the emitter is passed.
      *
      * @param  callable(): void|callable(\SineMacula\Sse\Emitter): void  $callback
      * @param  int  $interval
@@ -83,9 +83,9 @@ class EventStream
     /**
      * Handle a stream error.
      *
-     * Reports the exception and emits an error event to the client.
-     * Returns false to break the polling loop, or true to continue.
-     * Subclasses may override this to implement recovery strategies.
+     * Reports the exception and emits an error event to the client. Returns
+     * false to break the polling loop, or true to continue. Subclasses may
+     * override this to implement recovery strategies.
      *
      * @SuppressWarnings("php:S1172")
      *
@@ -119,9 +119,9 @@ class EventStream
      * Called after the polling loop exits.
      *
      * The default implementation is empty. Subclasses may override to perform
-     * cleanup such as releasing resources or logging, and may inspect
-     * `$reason` to distinguish a graceful duration/iteration ceiling from a
-     * client disconnect or an unrecoverable error.
+     * cleanup such as releasing resources or logging, and may inspect `$reason`
+     * to distinguish a graceful duration/iteration ceiling from a client
+     * disconnect or an unrecoverable error.
      *
      * @SuppressWarnings("php:S1172")
      *

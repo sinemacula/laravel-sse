@@ -92,8 +92,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that toResponse includes custom headers alongside SSE headers,
-     * with SSE headers taking precedence over conflicting custom headers.
+     * Test that toResponse includes custom headers alongside SSE headers, with
+     * SSE headers taking precedence over conflicting custom headers.
      *
      * @return void
      */
@@ -198,8 +198,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that the loop breaks when connection_aborted returns truthy on
-     * the first check, preventing the callback from executing.
+     * Test that the loop breaks when connection_aborted returns truthy on the
+     * first check, preventing the callback from executing.
      *
      * @return void
      */
@@ -222,8 +222,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that an error event is emitted and the loop breaks when the
-     * callback throws an exception.
+     * Test that an error event is emitted and the loop breaks when the callback
+     * throws an exception.
      *
      * @SuppressWarnings("php:S112")
      *
@@ -254,8 +254,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that the error event does not expose internal exception details
-     * such as the exception message or class name.
+     * Test that the error event does not expose internal exception details such
+     * as the exception message or class name.
      *
      * @SuppressWarnings("php:S112")
      *
@@ -405,8 +405,8 @@ final class EventStreamTest extends TestCase
 
     /**
      * Test that shouldContinueAfterError is overridable by subclasses. When the
-     * override returns true, the loop should continue and the callback
-     * should run more than once.
+     * override returns true, the loop should continue and the callback should
+     * run more than once.
      *
      * @SuppressWarnings("php:S112")
      *
@@ -509,9 +509,9 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that the Cache-Control header is the exact comma-separated
-     * directive list required for SSE responses. Symfony's header bag
-     * appends the computed `private` directive.
+     * Test that the Cache-Control header is the exact comma-separated directive
+     * list required for SSE responses. Symfony's header bag appends the
+     * computed `private` directive.
      *
      * @return void
      */
@@ -556,8 +556,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that the loop sleeps exactly once per full iteration and that
-     * the default polling interval of one second is forwarded to sleep.
+     * Test that the loop sleeps exactly once per full iteration and that the
+     * default polling interval of one second is forwarded to sleep.
      *
      * @return void
      */
@@ -588,8 +588,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that the loop terminates immediately after the first abort
-     * check signals a disconnect and never polls the connection again.
+     * Test that the loop terminates immediately after the first abort check
+     * signals a disconnect and never polls the connection again.
      *
      * @return void
      */
@@ -622,9 +622,9 @@ final class EventStreamTest extends TestCase
 
     /**
      * Test that the second per-iteration abort check terminates the loop
-     * entirely rather than skipping to a further iteration. The abort
-     * sequence reports a disconnect on the second check only; the callback
-     * must therefore run exactly once.
+     * entirely rather than skipping to a further iteration. The abort sequence
+     * reports a disconnect on the second check only; the callback must
+     * therefore run exactly once.
      *
      * @return void
      */
@@ -652,8 +652,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that each iteration flushes the active output buffer via
-     * ob_flush when a buffer level is active.
+     * Test that each iteration flushes the active output buffer via ob_flush
+     * when a buffer level is active.
      *
      * @return void
      */
@@ -745,9 +745,9 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that shouldContinueAfterError is callable from a subclass,
-     * reports the exception through the application exception handler,
-     * emits the generic error event, and signals the loop to stop.
+     * Test that shouldContinueAfterError is callable from a subclass, reports
+     * the exception through the application exception handler, emits the
+     * generic error event, and signals the loop to stop.
      *
      * @return void
      */
@@ -785,8 +785,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that onStreamStart is callable from a subclass and emits the
-     * initial keep-alive comment by default.
+     * Test that onStreamStart is callable from a subclass and emits the initial
+     * keep-alive comment by default.
      *
      * @return void
      */
@@ -811,8 +811,8 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that onStreamEnd is callable from a subclass and produces no
-     * output by default.
+     * Test that onStreamEnd is callable from a subclass and produces no output
+     * by default.
      *
      * @return void
      */
@@ -836,10 +836,9 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that the loop breaks on the second abort check within an
-     * iteration. The first and second checks pass, allowing the callback
-     * to run, then the third check (second per-iteration check) triggers
-     * the break.
+     * Test that the loop breaks on the second abort check within an iteration.
+     * The first and second checks pass, allowing the callback to run, then the
+     * third check (second per-iteration check) triggers the break.
      *
      * @return void
      */

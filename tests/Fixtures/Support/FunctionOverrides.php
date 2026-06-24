@@ -13,8 +13,8 @@ namespace Tests\Fixtures\Support;
  * Static registry for namespace-scoped PHP function overrides.
  *
  * Test code sets callbacks here; namespace-level function stubs in
- * Overrides/functions.php delegate to these callbacks, falling back to the
- * real built-in when no override is active.
+ * Overrides/functions.php delegate to these callbacks, falling back to the real
+ * built-in when no override is active.
  *
  * @author      Ben Carey <bdmc@sinemacula.co.uk>
  * @copyright   2026 Sine Macula Limited.
