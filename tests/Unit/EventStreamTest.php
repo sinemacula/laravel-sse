@@ -8,8 +8,8 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use SineMacula\Sse\Concerns\RespondsWithEventStream;
 use SineMacula\Sse\Emitter;
+use SineMacula\Sse\Enums\StreamTerminationReason;
 use SineMacula\Sse\EventStream;
-use SineMacula\Sse\StreamTerminationReason;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\Fixtures\Support\FunctionOverrides;
 use Tests\TestCase;
@@ -489,7 +489,7 @@ final class EventStreamTest extends TestCase
             public bool $endCalled = false;
 
             /**
-             * @param  \SineMacula\Sse\StreamTerminationReason  $reason
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
              * @return void
              */
             #[\Override]
@@ -950,11 +950,11 @@ final class EventStreamTest extends TestCase
             /** @var int */
             public int $endCount = 0;
 
-            /** @var \SineMacula\Sse\StreamTerminationReason|null */
+            /** @var \SineMacula\Sse\Enums\StreamTerminationReason|null */
             public ?StreamTerminationReason $endReason = null;
 
             /**
-             * @param  \SineMacula\Sse\StreamTerminationReason  $reason
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
              * @return void
              */
             #[\Override]
@@ -994,11 +994,11 @@ final class EventStreamTest extends TestCase
         });
 
         $stream = new class (60, 0, 3) extends EventStream {
-            /** @var \SineMacula\Sse\StreamTerminationReason|null */
+            /** @var \SineMacula\Sse\Enums\StreamTerminationReason|null */
             public ?StreamTerminationReason $endReason = null;
 
             /**
-             * @param  \SineMacula\Sse\StreamTerminationReason  $reason
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
              * @return void
              */
             #[\Override]
@@ -1030,11 +1030,11 @@ final class EventStreamTest extends TestCase
         FunctionOverrides::set('connection_aborted', fn (): int => 1);
 
         $stream = new class extends EventStream {
-            /** @var \SineMacula\Sse\StreamTerminationReason|null */
+            /** @var \SineMacula\Sse\Enums\StreamTerminationReason|null */
             public ?StreamTerminationReason $endReason = null;
 
             /**
-             * @param  \SineMacula\Sse\StreamTerminationReason  $reason
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
              * @return void
              */
             #[\Override]
@@ -1065,11 +1065,11 @@ final class EventStreamTest extends TestCase
         FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
         $stream = new class extends EventStream {
-            /** @var \SineMacula\Sse\StreamTerminationReason|null */
+            /** @var \SineMacula\Sse\Enums\StreamTerminationReason|null */
             public ?StreamTerminationReason $endReason = null;
 
             /**
-             * @param  \SineMacula\Sse\StreamTerminationReason  $reason
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
              * @return void
              */
             #[\Override]
@@ -1111,11 +1111,11 @@ final class EventStreamTest extends TestCase
         });
 
         $stream = new class extends EventStream {
-            /** @var \SineMacula\Sse\StreamTerminationReason|null */
+            /** @var \SineMacula\Sse\Enums\StreamTerminationReason|null */
             public ?StreamTerminationReason $endReason = null;
 
             /**
-             * @param  \SineMacula\Sse\StreamTerminationReason  $reason
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
              * @return void
              */
             #[\Override]

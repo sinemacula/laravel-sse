@@ -6,11 +6,6 @@ namespace SineMacula\Sse;
 
 use Tests\Fixtures\Support\FunctionOverrides;
 
-// These overrides intentionally shadow snake_case PHP built-ins, which the
-// SineMacula.ValidGlobalFunctionName rule requires; silence the conflicting
-// Squiz camelCase check for this fixture only.
-// phpcs:disable Squiz.NamingConventions.ValidFunctionName.NotCamelCaps
-
 /**
  * Override connection_aborted() within the Sse namespace.
  *

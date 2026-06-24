@@ -97,7 +97,7 @@ so you can tell a graceful ceiling-reached close from a client disconnect or an 
 ```php
 use SineMacula\Sse\EventStream;
 use SineMacula\Sse\Emitter;
-use SineMacula\Sse\StreamTerminationReason;
+use SineMacula\Sse\Enums\StreamTerminationReason;
 
 class MyStream extends EventStream
 {

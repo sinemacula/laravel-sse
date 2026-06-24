@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace SineMacula\Sse;
 
 use Carbon\CarbonInterface;
+use SineMacula\Sse\Enums\StreamTerminationReason;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -34,10 +35,13 @@ class EventStream
      * @param  int  $maxIterations
      */
     public function __construct(
+
         /** The heartbeat interval in seconds for keep-alive comments. */
         private readonly int $heartbeatInterval = 20,
+
         /** The maximum stream duration in seconds (0 = unbounded). */
         private readonly int $maxDuration = 0,
+
         /** The maximum number of poll iterations (0 = unbounded). */
         private readonly int $maxIterations = 0,
     ) {}
@@ -123,7 +127,7 @@ class EventStream
      *
      * @phpcsSuppress SlevomatCodingStandard.Functions.UnusedParameter
      *
-     * @param  \SineMacula\Sse\StreamTerminationReason  $reason
+     * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
      * @return void
      */
     protected function onStreamEnd(StreamTerminationReason $reason): void {}
@@ -205,7 +209,7 @@ class EventStream
      *
      * @param  \Carbon\CarbonInterface  $streamStart
      * @param  int  $iterations
-     * @return \SineMacula\Sse\StreamTerminationReason|null
+     * @return \SineMacula\Sse\Enums\StreamTerminationReason|null
      */
     private function ceilingReason(CarbonInterface $streamStart, int $iterations): ?StreamTerminationReason
     {
