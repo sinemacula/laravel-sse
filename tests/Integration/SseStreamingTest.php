@@ -16,9 +16,9 @@ use Tests\TestCase;
  * End-to-end tests covering SSE delivery over an actual HTTP response.
  *
  * A real HTTP request resolves a controller route that returns the
- * EventStream-based streamed response; the test asserts the negotiated
- * status, the SSE transport headers, and the streamed wire-format
- * content captured from the response body.
+ * EventStream-based streamed response; the test asserts the negotiated status,
+ * the SSE transport headers, and the streamed wire-format content captured from
+ * the response body.
  *
  * @author      Ben Carey <bdmc@sinemacula.co.uk>
  * @copyright   2026 Sine Macula Limited.
@@ -56,8 +56,8 @@ final class SseStreamingTest extends TestCase
     }
 
     /**
-     * Test that the SSE route responds with a streamed response carrying
-     * the SSE transport headers.
+     * Test that the SSE route responds with a streamed response carrying the
+     * SSE transport headers.
      *
      * @return void
      */

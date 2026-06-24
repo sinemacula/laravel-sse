@@ -10,9 +10,9 @@ use Tests\Fixtures\Support\FunctionOverrides;
 /**
  * Base test case for the laravel-sse package.
  *
- * Registers no additional service providers — the SSE package ships no
- * provider of its own. FunctionOverrides are reset after each test so
- * namespace-scoped stubs do not bleed between test methods.
+ * Registers no additional service providers — the SSE package ships no provider
+ * of its own. FunctionOverrides are reset after each test so namespace-scoped
+ * stubs do not bleed between test methods.
  *
  * @author      Ben Carey <bdmc@sinemacula.co.uk>
  * @copyright   2026 Sine Macula Limited.
