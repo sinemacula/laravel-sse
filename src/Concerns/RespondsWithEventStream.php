@@ -10,10 +10,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Controller helper for returning SSE event-stream responses.
  *
- * Mix this trait into any controller to gain `respondWithEventStream()`.
- * It is intentionally decoupled from the API toolkit base controller: the
- * HTTP status is accepted as a plain integer so callers are not forced to
- * depend on any particular enum library.
+ * Mix this trait into any controller to gain `respondWithEventStream()`. It is
+ * intentionally decoupled from the API toolkit base controller: the HTTP status
+ * is accepted as a plain integer so callers are not forced to depend on any
+ * particular enum library.
  *
  * @author      Ben Carey <bdmc@sinemacula.co.uk>
  * @copyright   2026 Sine Macula Limited.
