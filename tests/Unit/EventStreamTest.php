@@ -1452,4 +1452,200 @@ final class EventStreamTest extends TestCase
         // fire on every poll from the third on, producing five comments.
         self::assertSame(3, $commentCount);
     }
+
+    /**
+     * Test that the poll sleep is capped to the time remaining until the
+     * duration ceiling, so a long polling interval cannot carry the stream past
+     * maxDuration. With a 5s ceiling and a 60s interval the stream must end at
+     * 5s, having slept only the 5s remaining rather than the full 60s.
+     *
+     * @return void
+     */
+    public function testMaxDurationCapsSleepToRemainingTime(): void
+    {
+        $this->fakeMonotonicClock();
+
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
+
+        $sleeps = [];
+
+        FunctionOverrides::set('sleep', function (int $seconds) use (&$sleeps): int {
+            $sleeps[] = $seconds;
+            $this->advanceClock($seconds);
+
+            return 0;
+        });
+
+        $polls = 0;
+
+        $stream   = new EventStream(20, 5, 0);
+        $response = $stream->toResponse(function () use (&$polls): void {
+            $polls++;
+        }, interval: 60);
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        // One poll, then a single sleep capped to the 5s remaining (not the 60s
+        // interval), after which the loop-top duration check ends the stream.
+        self::assertSame(1, $polls);
+        self::assertSame([5], $sleeps);
+    }
+
+    /**
+     * Test that the full interval is slept while the deadline is far off - the
+     * cap selects the interval, not the larger time-to-deadline. A 2s interval
+     * under a 100s ceiling must sleep 2s, not 100s.
+     *
+     * @return void
+     */
+    public function testMaxDurationSleepUsesIntervalWhenDeadlineIsFarOff(): void
+    {
+        $this->fakeMonotonicClock();
+
+        $aborts = 0;
+
+        // Stay connected through the first poll's two checks, then
+        // disconnect on the next iteration's top check so one sleep is seen.
+        FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
+            return ++$aborts >= 3 ? 1 : 0;
+        });
+
+        $sleeps = [];
+
+        FunctionOverrides::set('sleep', function (int $seconds) use (&$sleeps): int {
+            $sleeps[] = $seconds;
+            $this->advanceClock($seconds);
+
+            return 0;
+        });
+
+        $stream   = new EventStream(20, 100, 0);
+        $response = $stream->toResponse(fn () => null, interval: 2);
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        self::assertSame([2], $sleeps);
+    }
+
+    /**
+     * Test that the duration-capped sleep rounds the remaining time up to whole
+     * seconds. With 4.2s left to a 10s ceiling the sleep must round up to 5s so
+     * the next loop-top check sees the deadline crossed, rather than truncating
+     * to 4s and running an extra poll.
+     *
+     * @return void
+     */
+    public function testMaxDurationSleepCapRoundsRemainingUpToWholeSeconds(): void
+    {
+        $this->fakeMonotonicClock();
+
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
+
+        $sleeps = [];
+
+        FunctionOverrides::set('sleep', function (int $seconds) use (&$sleeps): int {
+            $sleeps[] = $seconds;
+            $this->advanceClock($seconds);
+
+            return 0;
+        });
+
+        $polls = 0;
+
+        $stream   = new EventStream(20, 10, 0);
+        $response = $stream->toResponse(function () use (&$polls): void {
+            $polls++;
+            // Consume 5.8s of monotonic time during the poll, leaving 4.2s.
+            $this->advanceClockNanoseconds(5800000000);
+        }, interval: 60);
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        // ceil(4.2) = 5: one poll, one capped sleep of 5s, then termination. A
+        // truncating or rounding cap would sleep 4s and run a second poll.
+        self::assertSame(1, $polls);
+        self::assertSame([5], $sleeps);
+    }
+
+    /**
+     * Test that no sleep happens when a poll runs exactly up to the duration
+     * deadline. With 5s consumed against a 5s ceiling there is no time left, so
+     * the loop returns to its top check without sleeping.
+     *
+     * @return void
+     */
+    public function testMaxDurationSkipsSleepWhenDeadlineReachedExactlyDuringPoll(): void
+    {
+        $this->fakeMonotonicClock();
+
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
+
+        $sleeps = [];
+
+        FunctionOverrides::set('sleep', function (int $seconds) use (&$sleeps): int {
+            $sleeps[] = $seconds;
+            $this->advanceClock($seconds);
+
+            return 0;
+        });
+
+        $polls = 0;
+
+        $stream   = new EventStream(20, 5, 0);
+        $response = $stream->toResponse(function () use (&$polls): void {
+            $polls++;
+            $this->advanceClock(5);
+        }, interval: 60);
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        self::assertSame(1, $polls);
+        self::assertSame([], $sleeps);
+    }
+
+    /**
+     * Test that no sleep happens when a poll overruns the duration deadline. A
+     * poll that consumes more than the remaining time leaves a negative
+     * remainder, which must never be passed to sleep().
+     *
+     * @return void
+     */
+    public function testMaxDurationSkipsSleepWhenPollOverrunsDeadline(): void
+    {
+        $this->fakeMonotonicClock();
+
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
+
+        $sleeps = [];
+
+        FunctionOverrides::set('sleep', function (int $seconds) use (&$sleeps): int {
+            $sleeps[] = $seconds;
+            $this->advanceClock($seconds);
+
+            return 0;
+        });
+
+        $polls = 0;
+
+        $stream   = new EventStream(20, 5, 0);
+        $response = $stream->toResponse(function () use (&$polls): void {
+            $polls++;
+            $this->advanceClock(8);
+        }, interval: 60);
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        self::assertSame(1, $polls);
+        self::assertSame([], $sleeps);
+    }
 }

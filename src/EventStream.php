@@ -218,7 +218,7 @@ class EventStream
                 break;
             }
 
-            sleep($interval);
+            $this->sleepUntilNextPoll($interval, $streamStart);
         }
 
         $this->onStreamEnd($reason);
@@ -288,6 +288,37 @@ class EventStream
         }
 
         return $heartbeatAt;
+    }
+
+    /**
+     * Sleep until the next poll without overshooting the duration ceiling.
+     *
+     * A bounded stream must release its worker at `$maxDuration`, not up to a
+     * full polling interval later. Sleeping the whole interval after the final
+     * in-window poll would let a long interval carry the stream well past the
+     * deadline, so the sleep is shortened to the time remaining until the
+     * deadline (rounded up to whole seconds, the resolution of `sleep()`); the
+     * next loop-top check then ends the stream. When the deadline has already
+     * been reached the loop returns to that check without sleeping at all. With
+     * no duration ceiling configured the full interval is always slept.
+     *
+     * @param  int  $interval
+     * @param  int  $streamStart
+     * @return void
+     */
+    private function sleepUntilNextPoll(int $interval, int $streamStart): void
+    {
+        if ($this->maxDuration > 0) {
+            $remaining = $this->maxDuration * self::NANOSECONDS_PER_SECOND - (hrtime(true) - $streamStart);
+
+            if ($remaining <= 0) {
+                return;
+            }
+
+            $interval = min($interval, (int) ceil($remaining / self::NANOSECONDS_PER_SECOND));
+        }
+
+        sleep($interval);
     }
 
     /**
