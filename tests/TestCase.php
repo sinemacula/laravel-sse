@@ -66,4 +66,18 @@ abstract class TestCase extends OrchestraTestCase
     {
         $this->monotonicClock += $seconds * self::NS_PER_SECOND;
     }
+
+    /**
+     * Advance the fake monotonic clock by the given number of nanoseconds.
+     *
+     * Sub-second control is needed to exercise the duration-deadline arithmetic
+     * at a finer resolution than {@see advanceClock()} allows.
+     *
+     * @param  int  $nanoseconds
+     * @return void
+     */
+    protected function advanceClockNanoseconds(int $nanoseconds): void
+    {
+        $this->monotonicClock += $nanoseconds;
+    }
 }

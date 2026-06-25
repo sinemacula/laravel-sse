@@ -20,7 +20,7 @@
     "require": {
         "php": "^8.3",
         "illuminate/support": "^12.9",
-        "symfony/http-foundation": "^7.0"
+        "symfony/http-foundation": "^7.2"
     },
     "require-dev": {
         "brianium/paratest": "^7.20",

@@ -131,7 +131,9 @@ indefinitely, and enough concurrent connections exhaust the pool and starve unre
 - **Set a ceiling under Octane.** Configure `maxStreamDuration()` (or the `maxDuration` constructor argument) so each
   stream self-terminates and returns its worker to the pool even if the client never disconnects. A starting point of
   **300 seconds** is reasonable for most Octane deployments; tune it to your worker count and traffic. The cap fires
-  before Octane's own `max_execution_time` SIGKILL, so the close is graceful rather than a killed worker.
+  before Octane's own `max_execution_time` SIGKILL, so the close is graceful rather than a killed worker. The ceiling is
+  enforced regardless of the polling interval: the final sleep before the deadline is shortened to the time remaining,
+  so a long `interval` cannot hold the worker past `maxDuration`.
 - **The default is unbounded.** With no ceiling set the loop runs until the client disconnects, exactly as under
   php-fpm - opt in to a ceiling; it is never imposed.
 - **Offload high-concurrency streaming.** A self-terminating poll loop bounds a single stream, but it does not turn the
@@ -175,6 +177,9 @@ A string-backed enum passed to `onStreamEnd()`: `CLIENT_DISCONNECT`, `ERROR`, `M
   on a negative `heartbeatInterval`, `maxDuration`, `maxIterations`, or `interval`. `0` is accepted as the documented
   unbounded (ceilings) / no-delay (`interval`) sentinel. The same applies to negative returns from the trait's
   `heartbeatInterval()` / `maxStreamDuration()` / `maxStreamIterations()` seams.
+- A `heartbeatInterval` of `0` is not "heartbeats off" - it means a zero-second interval, so a keep-alive comment is
+  emitted on every poll. Leave it at the default (or any positive value) for normal cadence; there is no disable
+  sentinel because a stream with no keep-alive would defeat the proxy-timeout protection the heartbeat exists to give.
 - The constructor parameter order is stable as of 1.0; passing arguments by name - `new EventStream(maxDuration: 300)` -
   reads more clearly and is recommended over positional arguments.
 - `Emitter::emit()` throws `JsonException` if array data cannot be encoded (for example, invalid UTF-8); the polling
