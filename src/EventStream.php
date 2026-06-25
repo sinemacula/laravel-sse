@@ -82,12 +82,8 @@ class EventStream
      *
      * @throws \InvalidArgumentException
      */
-    public function toResponse(
-        callable $callback,
-        int $interval = 1,
-        int $status = 200,
-        array $headers = [],
-    ): StreamedResponse {
+    public function toResponse(callable $callback, int $interval = 1, int $status = 200, array $headers = []): StreamedResponse
+    {
         if ($interval < 0) {
             throw new \InvalidArgumentException('The polling interval must not be negative.');
         }
