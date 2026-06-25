@@ -29,15 +29,19 @@ final class Emitter
      * @param  array<mixed>|string  $data
      * @param  string|null  $event
      * @return void
+     *
+     * @throws \JsonException
      */
     public function emit(array|string $data, ?string $event = null): void
     {
         if ($event !== null) {
+            $event = str_replace(["\r", "\n"], '', $event);
+
             echo "event: {$event}\n";
         }
 
         if (is_array($data)) {
-            $data = json_encode($data);
+            $data = json_encode($data, JSON_THROW_ON_ERROR);
         }
 
         foreach ((array) preg_split('/\r\n|\r|\n/', $data) as $line) {
@@ -60,6 +64,8 @@ final class Emitter
      */
     public function comment(string $text = ''): void
     {
+        $text = str_replace(["\r", "\n"], '', $text);
+
         echo ":{$text}\n\n";
 
         flush();

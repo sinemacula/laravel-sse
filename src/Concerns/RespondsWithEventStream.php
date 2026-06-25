@@ -73,12 +73,8 @@ trait RespondsWithEventStream
      * @param  array<string, string>  $headers
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    protected function respondWithEventStream(
-        callable $callback,
-        int $interval = 1,
-        int $status = 200,
-        array $headers = [],
-    ): StreamedResponse {
+    protected function respondWithEventStream(callable $callback, int $interval = 1, int $status = 200, array $headers = []): StreamedResponse
+    {
         return (new EventStream($this->heartbeatInterval(), $this->maxStreamDuration(), $this->maxStreamIterations()))
             ->toResponse($callback, $interval, $status, $headers);
     }

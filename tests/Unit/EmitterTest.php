@@ -109,6 +109,18 @@ final class EmitterTest extends TestCase
     }
 
     /**
+     * Test that emit throws when array data cannot be JSON-encoded.
+     *
+     * @return void
+     */
+    public function testEmitThrowsWhenArrayDataCannotBeJsonEncoded(): void
+    {
+        $this->expectException(\JsonException::class);
+
+        $this->emitter->emit(["\xB1\x31"]);
+    }
+
+    /**
      * Test that comment writes an empty comment line.
      *
      * @return void
@@ -134,6 +146,21 @@ final class EmitterTest extends TestCase
         $output = ob_get_clean();
 
         self::assertSame(": keep-alive\n\n", $output);
+    }
+
+    /**
+     * Test that comment strips CR/LF from the text to prevent SSE field
+     * injection.
+     *
+     * @return void
+     */
+    public function testCommentStripsCrlfFromTextToPreventFieldInjection(): void
+    {
+        ob_start();
+        $this->emitter->comment("ping\rdata: forged\nevent: spoof");
+        $output = ob_get_clean();
+
+        self::assertSame(":pingdata: forgedevent: spoof\n\n", $output);
     }
 
     /**
@@ -218,6 +245,21 @@ final class EmitterTest extends TestCase
         $output = ob_get_clean();
 
         self::assertSame("data: data: fake\ndata: event: x\n\n", $output);
+    }
+
+    /**
+     * Test that emit strips CR/LF from the event name to prevent SSE field
+     * injection.
+     *
+     * @return void
+     */
+    public function testEmitStripsCrlfFromEventNameToPreventFieldInjection(): void
+    {
+        ob_start();
+        $this->emitter->emit('hello', "ping\rdata: forged\nevent: spoof");
+        $output = ob_get_clean();
+
+        self::assertSame("event: pingdata: forgedevent: spoof\ndata: hello\n\n", $output);
     }
 
     /**

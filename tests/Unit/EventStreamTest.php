@@ -51,7 +51,7 @@ final class EventStreamTest extends TestCase
 
         FunctionOverrides::set('flush', fn () => null);
         FunctionOverrides::set('ob_flush', fn () => null);
-        FunctionOverrides::set('ob_get_level', fn () => 0);
+        FunctionOverrides::set('ob_get_status', fn (): array => []);
         FunctionOverrides::set('sleep', fn () => 0);
         FunctionOverrides::set('connection_aborted', fn (): int => 1);
     }
@@ -102,12 +102,21 @@ final class EventStreamTest extends TestCase
         $stream = new EventStream;
 
         $response = $stream->toResponse(fn () => null, headers: [
-            'X-Stream-Id'  => 'abc123',
-            'Content-Type' => 'application/json',
+            'X-Stream-Id'       => 'abc123',
+            'Content-Type'      => 'application/json',
+            'Cache-Control'     => 'max-age=3600',
+            'Connection'        => 'close',
+            'X-Accel-Buffering' => 'yes',
         ]);
+
+        $cacheControl = (string) $response->headers->get('Cache-Control');
 
         self::assertSame('abc123', $response->headers->get('X-Stream-Id'));
         self::assertSame('text/event-stream', $response->headers->get('Content-Type'));
+        self::assertStringContainsString('no-cache, no-transform', $cacheControl);
+        self::assertStringNotContainsString('max-age', $cacheControl);
+        self::assertSame('keep-alive', $response->headers->get('Connection'));
+        self::assertSame('no', $response->headers->get('X-Accel-Buffering'));
     }
 
     /**
@@ -122,6 +131,68 @@ final class EventStreamTest extends TestCase
         $response = $stream->toResponse(fn () => null, status: 202);
 
         self::assertSame(202, $response->getStatusCode());
+    }
+
+    /**
+     * Test that zero is accepted for every timing input - it is the documented
+     * unbounded / no-delay sentinel, not a rejected value.
+     *
+     * @return void
+     */
+    public function testZeroIsAcceptedForEveryTimingInput(): void
+    {
+        $stream   = new EventStream(0, 0, 0);
+        $response = $stream->toResponse(fn () => null, 0);
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    /**
+     * Test that the constructor rejects a negative heartbeat interval.
+     *
+     * @return void
+     */
+    public function testConstructorRejectsNegativeHeartbeatInterval(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new EventStream(heartbeatInterval: -1);
+    }
+
+    /**
+     * Test that the constructor rejects a negative maximum duration.
+     *
+     * @return void
+     */
+    public function testConstructorRejectsNegativeMaxDuration(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new EventStream(maxDuration: -1);
+    }
+
+    /**
+     * Test that the constructor rejects a negative maximum iteration count.
+     *
+     * @return void
+     */
+    public function testConstructorRejectsNegativeMaxIterations(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new EventStream(maxIterations: -1);
+    }
+
+    /**
+     * Test that toResponse rejects a negative polling interval.
+     *
+     * @return void
+     */
+    public function testToResponseRejectsNegativeInterval(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new EventStream)->toResponse(fn () => null, -1);
     }
 
     /**
@@ -169,23 +240,20 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that a heartbeat comment is emitted after the interval elapses.
+     * Test that a heartbeat comment is emitted on each poll whose elapsed time
+     * has crossed the configured interval.
      *
      * @return void
      */
     public function testStreamEmitsHeartbeatAfterInterval(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $abortCount = 0;
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
-            return ++$abortCount >= 4 ? 1 : 0;
-        });
-
-        $stream   = new EventStream(heartbeatInterval: 5);
+        $stream   = new EventStream(heartbeatInterval: 5, maxIterations: 2);
         $response = $stream->toResponse(function (): void {
-            $this->travel(6)->seconds();
+            $this->advanceClock(6);
         });
 
         ob_start();
@@ -194,7 +262,9 @@ final class EventStreamTest extends TestCase
 
         $commentCount = substr_count((string) $output, self::SSE_COMMENT);
 
-        self::assertGreaterThanOrEqual(2, $commentCount);
+        // One initial keep-alive comment plus one heartbeat per poll: each poll
+        // advances 6s, crossing the 5s interval every time.
+        self::assertSame(3, $commentCount);
     }
 
     /**
@@ -338,31 +408,48 @@ final class EventStreamTest extends TestCase
     }
 
     /**
+     * Test that a callback whose only parameter is optional still receives the
+     * emitter. Detection is by declared parameter count, not by whether the
+     * parameter is required.
+     *
+     * @return void
+     */
+    public function testStreamPassesEmitterWhenCallbackFirstParameterIsOptional(): void
+    {
+        $abortCount = 0;
+
+        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
+            return ++$abortCount >= 2 ? 1 : 0;
+        });
+
+        $receivedEmitter = null;
+
+        $stream   = new EventStream;
+        $response = $stream->toResponse(function (?Emitter $emitter = null) use (&$receivedEmitter): void {
+            $receivedEmitter = $emitter;
+        });
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        self::assertInstanceOf(Emitter::class, $receivedEmitter);
+    }
+
+    /**
      * Test that the default heartbeat interval is twenty seconds.
      *
      * @return void
      */
     public function testDefaultHeartbeatIntervalIsTwenty(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $abortCount = 0;
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
-            return ++$abortCount >= 4 ? 1 : 0;
-        });
-
-        $iteration = 0;
-
-        $stream   = new EventStream;
-        $response = $stream->toResponse(function () use (&$iteration): void {
-            $iteration++;
-
-            if ($iteration !== 1) {
-                return;
-            }
-
-            $this->travel(19)->seconds();
+        $stream   = new EventStream(maxIterations: 1);
+        $response = $stream->toResponse(function (): void {
+            $this->advanceClock(19);
         });
 
         ob_start();
@@ -371,6 +458,8 @@ final class EventStreamTest extends TestCase
 
         $commentCount = substr_count((string) $output, self::SSE_COMMENT);
 
+        // Only the initial keep-alive comment: 19s has not crossed the default
+        // 20s interval, so no heartbeat fires.
         self::assertSame(1, $commentCount);
     }
 
@@ -381,17 +470,13 @@ final class EventStreamTest extends TestCase
      */
     public function testCustomHeartbeatIntervalIsRespected(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $abortCount = 0;
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
-            return ++$abortCount >= 4 ? 1 : 0;
-        });
-
-        $stream   = new EventStream(heartbeatInterval: 5);
+        $stream   = new EventStream(heartbeatInterval: 5, maxIterations: 2);
         $response = $stream->toResponse(function (): void {
-            $this->travel(5)->seconds();
+            $this->advanceClock(5);
         });
 
         ob_start();
@@ -400,7 +485,9 @@ final class EventStreamTest extends TestCase
 
         $commentCount = substr_count((string) $output, self::SSE_COMMENT);
 
-        self::assertGreaterThanOrEqual(2, $commentCount);
+        // Each poll advances exactly the 5s interval, so a heartbeat fires on
+        // every poll: one initial comment plus two heartbeats.
+        self::assertSame(3, $commentCount);
     }
 
     /**
@@ -445,6 +532,77 @@ final class EventStreamTest extends TestCase
         ob_get_clean();
 
         self::assertGreaterThan(1, $callCount);
+    }
+
+    /**
+     * Test that the recoverable-error path still advances the iteration count,
+     * evaluates the ceiling, and sleeps. A callback that keeps throwing while
+     * shouldContinueAfterError returns true must self-terminate at its ceiling
+     * rather than spin at full CPU with the ceiling never firing.
+     *
+     * @SuppressWarnings("php:S112")
+     *
+     * @return void
+     */
+    public function testRecoverableErrorPathStillAdvancesCeilingAndSleeps(): void
+    {
+        $aborts = 0;
+
+        // A high backstop prevents a runaway loop if the recovery path
+        // regresses, so the assertions fail cleanly rather than hang.
+        FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
+            return ++$aborts >= 1000 ? 1 : 0;
+        });
+
+        $sleeps = 0;
+
+        FunctionOverrides::set('sleep', function () use (&$sleeps): int {
+            $sleeps++;
+
+            return 0;
+        });
+
+        $callCount = 0;
+
+        $stream = new class (60, 0, 3) extends EventStream {
+            /** @var \SineMacula\Sse\Enums\StreamTerminationReason|null */
+            public ?StreamTerminationReason $endReason = null;
+
+            /**
+             * @param  \Throwable  $exception
+             * @param  \SineMacula\Sse\Emitter  $emitter
+             * @return bool
+             */
+            #[\Override]
+            protected function shouldContinueAfterError(\Throwable $exception, Emitter $emitter): bool
+            {
+                return true;
+            }
+
+            /**
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
+             * @return void
+             */
+            #[\Override]
+            protected function onStreamEnd(StreamTerminationReason $reason): void
+            {
+                $this->endReason = $reason;
+            }
+        };
+
+        $response = $stream->toResponse(function () use (&$callCount): void {
+            $callCount++;
+
+            throw new \RuntimeException('Recoverable error');
+        });
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        self::assertSame(3, $callCount);
+        self::assertSame(2, $sleeps);
+        self::assertSame(StreamTerminationReason::MAX_ITERATIONS, $stream->endReason);
     }
 
     /**
@@ -509,9 +667,10 @@ final class EventStreamTest extends TestCase
     }
 
     /**
-     * Test that the Cache-Control header is the exact comma-separated directive
-     * list required for SSE responses. Symfony's header bag appends the
-     * computed `private` directive.
+     * Test that the Cache-Control header leads with the comma-separated
+     * directive list required for SSE responses. Asserting the prefix keeps the
+     * test from coupling to any directive Symfony's header bag may append (such
+     * as the computed `private`).
      *
      * @return void
      */
@@ -521,7 +680,7 @@ final class EventStreamTest extends TestCase
 
         $response = $stream->toResponse(fn () => null);
 
-        self::assertSame('no-cache, no-transform, private', $response->headers->get('Cache-Control'));
+        self::assertStringStartsWith('no-cache, no-transform', (string) $response->headers->get('Cache-Control'));
     }
 
     /**
@@ -533,17 +692,13 @@ final class EventStreamTest extends TestCase
      */
     public function testDefaultHeartbeatFiresExactlyAtTwentySecondBoundary(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $abortCount = 0;
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
-            return ++$abortCount >= 3 ? 1 : 0;
-        });
-
-        $stream   = new EventStream;
+        $stream   = new EventStream(maxIterations: 1);
         $response = $stream->toResponse(function (): void {
-            $this->travel(20)->seconds();
+            $this->advanceClock(20);
         });
 
         ob_start();
@@ -552,6 +707,8 @@ final class EventStreamTest extends TestCase
 
         $commentCount = substr_count((string) $output, self::SSE_COMMENT);
 
+        // Initial comment plus exactly one heartbeat: 20s elapsed meets the 20s
+        // interval on a >= boundary.
         self::assertSame(2, $commentCount);
     }
 
@@ -653,7 +810,7 @@ final class EventStreamTest extends TestCase
 
     /**
      * Test that each iteration flushes the active output buffer via ob_flush
-     * when a buffer level is active.
+     * when a flushable buffer is active.
      *
      * @return void
      */
@@ -665,7 +822,7 @@ final class EventStreamTest extends TestCase
             return ++$abortCount >= 2 ? 1 : 0;
         });
 
-        FunctionOverrides::set('ob_get_level', fn (): int => 1);
+        FunctionOverrides::set('ob_get_status', fn (): array => ['flags' => PHP_OUTPUT_HANDLER_FLUSHABLE]);
 
         $obFlushCount = 0;
 
@@ -696,7 +853,40 @@ final class EventStreamTest extends TestCase
             return ++$abortCount >= 2 ? 1 : 0;
         });
 
-        FunctionOverrides::set('ob_get_level', fn (): int => 0);
+        FunctionOverrides::set('ob_get_status', fn (): array => []);
+
+        $obFlushCount = 0;
+
+        FunctionOverrides::set('ob_flush', function () use (&$obFlushCount): void {
+            $obFlushCount++;
+        });
+
+        $stream   = new EventStream;
+        $response = $stream->toResponse(fn () => null);
+
+        ob_start();
+        $response->sendContent();
+        ob_get_clean();
+
+        self::assertSame(0, $obFlushCount);
+    }
+
+    /**
+     * Test that ob_flush is not called when the active buffer is not flushable.
+     * A buffer level alone is not sufficient - the PHP_OUTPUT_HANDLER_FLUSHABLE
+     * flag must be set, otherwise ob_flush() would warn.
+     *
+     * @return void
+     */
+    public function testFlushOutputSkipsObFlushWhenBufferIsNotFlushable(): void
+    {
+        $abortCount = 0;
+
+        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
+            return ++$abortCount >= 2 ? 1 : 0;
+        });
+
+        FunctionOverrides::set('ob_get_status', fn (): array => ['flags' => 0]);
 
         $obFlushCount = 0;
 
@@ -875,7 +1065,7 @@ final class EventStreamTest extends TestCase
      */
     public function testStreamSelfTerminatesAtConfiguredMaxDuration(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
         $polls  = 0;
         $aborts = 0;
@@ -886,17 +1076,18 @@ final class EventStreamTest extends TestCase
             return ++$aborts >= 1000 ? 1 : 0;
         });
 
-        $stream   = new EventStream(60, 5);
+        $stream   = new EventStream(maxDuration: 5);
         $response = $stream->toResponse(function () use (&$polls): void {
             $polls++;
-            $this->travel(1)->seconds();
+            $this->advanceClock(1);
         });
 
         ob_start();
         $response->sendContent();
         ob_get_clean();
 
-        // 5s ceiling at 1s per poll: the loop exits on the fifth poll.
+        // 5s ceiling at 1s per poll: the duration check trips before the sixth
+        // poll, so the callback runs exactly five times.
         self::assertSame(5, $polls);
     }
 
@@ -936,7 +1127,7 @@ final class EventStreamTest extends TestCase
      */
     public function testMaxDurationTerminationRunsOnStreamEndOnceWithReason(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
         $polls  = 0;
         $aborts = 0;
@@ -966,7 +1157,7 @@ final class EventStreamTest extends TestCase
 
         $response = $stream->toResponse(function () use (&$polls): void {
             $polls++;
-            $this->travel(1)->seconds();
+            $this->advanceClock(1);
         });
 
         ob_start();
@@ -1099,7 +1290,7 @@ final class EventStreamTest extends TestCase
      */
     public function testDefaultUnboundedStreamDoesNotSelfTerminate(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
         $polls  = 0;
         $aborts = 0;
@@ -1126,7 +1317,7 @@ final class EventStreamTest extends TestCase
 
         $response = $stream->toResponse(function () use (&$polls): void {
             $polls++;
-            $this->travel(3600)->seconds();
+            $this->advanceClock(3600);
         });
 
         ob_start();
@@ -1148,7 +1339,7 @@ final class EventStreamTest extends TestCase
      */
     public function testRespondWithEventStreamThreadsMaxDurationFromTraitMethod(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
         $polls  = 0;
         $aborts = 0;
@@ -1180,7 +1371,7 @@ final class EventStreamTest extends TestCase
 
         $response = $controller->run(function () use (&$polls): void {
             $polls++;
-            $this->travel(1)->seconds();
+            $this->advanceClock(1);
         });
 
         ob_start();
@@ -1238,20 +1429,16 @@ final class EventStreamTest extends TestCase
      */
     public function testHeartbeatTimestampResetsBetweenIntervals(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $aborts = 0;
-
-        FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
-            return ++$aborts >= 25 ? 1 : 0;
-        });
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
         // Each poll advances less than the 10s interval, so without the
         // post-heartbeat timestamp reset the heartbeat would fire on every poll
         // once the first interval elapses, inflating the comment count.
-        $stream   = new EventStream(heartbeatInterval: 10);
+        $stream   = new EventStream(heartbeatInterval: 10, maxIterations: 6);
         $response = $stream->toResponse(function (): void {
-            $this->travel(4)->seconds();
+            $this->advanceClock(4);
         });
 
         ob_start();
@@ -1260,9 +1447,9 @@ final class EventStreamTest extends TestCase
 
         $commentCount = substr_count((string) $output, self::SSE_COMMENT);
 
-        // One initial keep-alive plus a heartbeat roughly every third poll,
-        // far fewer than the one-per-poll a missing reset would produce.
-        self::assertGreaterThanOrEqual(2, $commentCount);
-        self::assertLessThanOrEqual(5, $commentCount);
+        // Initial keep-alive plus a heartbeat at polls 3 and 6 (4s per poll,
+        // 10s interval, timestamp reset after each fire). A missing reset would
+        // fire on every poll from the third on, producing five comments.
+        self::assertSame(3, $commentCount);
     }
 }
