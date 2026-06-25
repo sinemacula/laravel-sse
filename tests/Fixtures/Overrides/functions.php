@@ -80,20 +80,41 @@ function ob_flush(): void
 }
 
 /**
- * Override ob_get_level() within the Sse namespace.
+ * Override ob_get_status() within the Sse namespace.
  *
  * @SuppressWarnings("php:S100")
  *
+ * @return array<string, int>
+ */
+function ob_get_status(): array
+{
+    $override = FunctionOverrides::get('ob_get_status');
+
+    if ($override !== null) {
+        // @phpstan-ignore return.type
+        return $override();
+    }
+
+    // @phpstan-ignore return.type
+    return \ob_get_status();
+}
+
+/**
+ * Override hrtime() within the Sse namespace.
+ *
+ * @SuppressWarnings("php:S100")
+ *
+ * @param  bool  $asNumber
  * @return int
  */
-function ob_get_level(): int
+function hrtime(bool $asNumber = true): int
 {
-    $override = FunctionOverrides::get('ob_get_level');
+    $override = FunctionOverrides::get('hrtime');
 
     if ($override !== null) {
         // @phpstan-ignore cast.int
-        return (int) $override();
+        return (int) $override($asNumber);
     }
 
-    return \ob_get_level();
+    return \hrtime(true);
 }

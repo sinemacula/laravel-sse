@@ -42,7 +42,7 @@ final class RespondsWithEventStreamTest extends TestCase
 
         FunctionOverrides::set('flush', fn () => null);
         FunctionOverrides::set('ob_flush', fn () => null);
-        FunctionOverrides::set('ob_get_level', fn () => 0);
+        FunctionOverrides::set('ob_get_status', fn (): array => []);
         FunctionOverrides::set('sleep', fn () => 0);
         FunctionOverrides::set('connection_aborted', fn (): int => 1);
     }
@@ -128,16 +128,25 @@ final class RespondsWithEventStreamTest extends TestCase
      */
     public function testDefaultHeartbeatFiresAtTwentySecondBoundary(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $abortCount = 0;
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
-            return ++$abortCount >= 3 ? 1 : 0;
-        });
+        // Bound to a single poll via the iteration ceiling so the count is
+        // deterministic without depending on the loop's abort-check cadence.
+        $harness = new class extends RespondsWithEventStreamHarness {
+            /**
+             * @return int
+             */
+            #[\Override]
+            protected function maxStreamIterations(): int
+            {
+                return 1;
+            }
+        };
 
-        $response = (new RespondsWithEventStreamHarness)->stream(function (): void {
-            $this->travel(20)->seconds();
+        $response = $harness->stream(function (): void {
+            $this->advanceClock(20);
         });
 
         ob_start();
@@ -156,16 +165,25 @@ final class RespondsWithEventStreamTest extends TestCase
      */
     public function testDefaultHeartbeatDoesNotFireBeforeTwentySeconds(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $abortCount = 0;
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
-            return ++$abortCount >= 3 ? 1 : 0;
-        });
+        // Bound to a single poll via the iteration ceiling so the count is
+        // deterministic without depending on the loop's abort-check cadence.
+        $harness = new class extends RespondsWithEventStreamHarness {
+            /**
+             * @return int
+             */
+            #[\Override]
+            protected function maxStreamIterations(): int
+            {
+                return 1;
+            }
+        };
 
-        $response = (new RespondsWithEventStreamHarness)->stream(function (): void {
-            $this->travel(19)->seconds();
+        $response = $harness->stream(function (): void {
+            $this->advanceClock(19);
         });
 
         ob_start();
@@ -184,7 +202,7 @@ final class RespondsWithEventStreamTest extends TestCase
      */
     public function testDefaultCeilingsLeaveTheStreamUnbounded(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
         $polls  = 0;
         $aborts = 0;
@@ -195,7 +213,7 @@ final class RespondsWithEventStreamTest extends TestCase
 
         $response = (new RespondsWithEventStreamHarness)->stream(function () use (&$polls): void {
             $polls++;
-            $this->travel(3600)->seconds();
+            $this->advanceClock(3600);
         });
 
         ob_start();
@@ -217,13 +235,9 @@ final class RespondsWithEventStreamTest extends TestCase
      */
     public function testOverriddenHeartbeatIntervalIsHonoured(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
-        $abortCount = 0;
-
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
-            return ++$abortCount >= 3 ? 1 : 0;
-        });
+        FunctionOverrides::set('connection_aborted', fn (): int => 0);
 
         $harness = new class extends RespondsWithEventStreamHarness {
             /**
@@ -234,10 +248,19 @@ final class RespondsWithEventStreamTest extends TestCase
             {
                 return 5;
             }
+
+            /**
+             * @return int
+             */
+            #[\Override]
+            protected function maxStreamIterations(): int
+            {
+                return 1;
+            }
         };
 
         $response = $harness->stream(function (): void {
-            $this->travel(5)->seconds();
+            $this->advanceClock(5);
         });
 
         ob_start();
@@ -256,7 +279,7 @@ final class RespondsWithEventStreamTest extends TestCase
      */
     public function testOverriddenMaxStreamDurationCapsTheStream(): void
     {
-        $this->travelTo(now());
+        $this->fakeMonotonicClock();
 
         $polls  = 0;
         $aborts = 0;
@@ -278,7 +301,7 @@ final class RespondsWithEventStreamTest extends TestCase
 
         $response = $harness->stream(function () use (&$polls): void {
             $polls++;
-            $this->travel(1)->seconds();
+            $this->advanceClock(1);
         });
 
         ob_start();

@@ -19,6 +19,12 @@ use Tests\Fixtures\Support\FunctionOverrides;
  */
 abstract class TestCase extends OrchestraTestCase
 {
+    /** The number of nanoseconds in one second. */
+    private const int NS_PER_SECOND = 1000000000;
+
+    /** @var int The fake monotonic clock value, in nanoseconds. */
+    private int $monotonicClock = 0;
+
     /**
      * Clean up the testing environment before the next test.
      *
@@ -30,5 +36,34 @@ abstract class TestCase extends OrchestraTestCase
         FunctionOverrides::reset();
 
         parent::tearDown();
+    }
+
+    /**
+     * Install a controllable monotonic clock in place of hrtime(true).
+     *
+     * EventStream measures elapsed time with hrtime(true), which time-travel
+     * helpers cannot move. The clock starts at a non-zero origin so elapsed
+     * arithmetic (now - start) is distinguishable from a sign flip, and is
+     * advanced explicitly via {@see advanceClock()}.
+     *
+     * @param  int  $originSeconds
+     * @return void
+     */
+    protected function fakeMonotonicClock(int $originSeconds = 1000): void
+    {
+        $this->monotonicClock = $originSeconds * self::NS_PER_SECOND;
+
+        FunctionOverrides::set('hrtime', fn (): int => $this->monotonicClock);
+    }
+
+    /**
+     * Advance the fake monotonic clock by the given number of seconds.
+     *
+     * @param  int  $seconds
+     * @return void
+     */
+    protected function advanceClock(int $seconds): void
+    {
+        $this->monotonicClock += $seconds * self::NS_PER_SECOND;
     }
 }

@@ -169,6 +169,18 @@ A string-backed enum passed to `onStreamEnd()`: `CLIENT_DISCONNECT`, `ERROR`, `M
 | `respondWithEventStream(callable $callback, int $interval = 1, int $status = 200, array $headers = [])` | Convenience wrapper around `EventStream::toResponse()`.                                           |
 | `heartbeatInterval()` / `maxStreamDuration()` / `maxStreamIterations()` _(protected)_                   | Override to configure the heartbeat cadence and the stream ceilings. Default to `20` / `0` / `0`. |
 
+### Validation and errors
+
+- Negative timing values are rejected: the `EventStream` constructor and `toResponse()` throw `InvalidArgumentException`
+  on a negative `heartbeatInterval`, `maxDuration`, `maxIterations`, or `interval`. `0` is accepted as the documented
+  unbounded (ceilings) / no-delay (`interval`) sentinel. The same applies to negative returns from the trait's
+  `heartbeatInterval()` / `maxStreamDuration()` / `maxStreamIterations()` seams.
+- The constructor parameter order is stable as of 1.0; passing arguments by name - `new EventStream(maxDuration: 300)` -
+  reads more clearly and is recommended over positional arguments.
+- `Emitter::emit()` throws `JsonException` if array data cannot be encoded (for example, invalid UTF-8); the polling
+  loop routes that through `shouldContinueAfterError()`. CR/LF in an event name or comment text is stripped to prevent
+  SSE field injection.
+
 ## Requirements
 
 - PHP ^8.3

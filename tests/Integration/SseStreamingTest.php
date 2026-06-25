@@ -6,6 +6,8 @@ namespace Tests\Integration;
 
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\CoversClass;
+use SineMacula\Sse\Emitter;
+use SineMacula\Sse\Enums\StreamTerminationReason;
 use SineMacula\Sse\EventStream;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\Fixtures\Controllers\TestingSseController;
@@ -45,7 +47,7 @@ final class SseStreamingTest extends TestCase
 
         FunctionOverrides::set('flush', fn () => null);
         FunctionOverrides::set('ob_flush', fn () => null);
-        FunctionOverrides::set('ob_get_level', fn () => 0);
+        FunctionOverrides::set('ob_get_status', fn (): array => []);
         FunctionOverrides::set('sleep', fn () => 0);
 
         $abortCount = 0;
@@ -96,6 +98,52 @@ final class SseStreamingTest extends TestCase
 
         $content = $response->streamedContent();
 
+        self::assertSame(":\n\nevent: update\ndata: {\"tick\":1}\n\n", $content);
+    }
+
+    /**
+     * Test that the polling loop runs against the real IO primitives - no
+     * faked flush/ob_flush/ob_get_status/sleep/connection_aborted - bounded to
+     * a single iteration, proving it actually flushes a live output buffer and
+     * self-terminates at the iteration ceiling rather than only making the
+     * right decisions around stubbed IO.
+     *
+     * @return void
+     */
+    public function testStreamFlushesRealBufferAndExitsAtIterationCeiling(): void
+    {
+        // Drop every IO stub so flush(), ob_flush(), ob_get_status(), sleep()
+        // and connection_aborted() all execute for real.
+        FunctionOverrides::reset();
+
+        $stream = new class (60, 0, 1) extends EventStream {
+            /** @var \SineMacula\Sse\Enums\StreamTerminationReason|null */
+            public ?StreamTerminationReason $endReason = null;
+
+            /**
+             * @param  \SineMacula\Sse\Enums\StreamTerminationReason  $reason
+             * @return void
+             */
+            #[\Override]
+            protected function onStreamEnd(StreamTerminationReason $reason): void
+            {
+                $this->endReason = $reason;
+            }
+        };
+
+        $response = $stream->toResponse(function (Emitter $emitter): void {
+            $emitter->emit(['tick' => 1], 'update');
+        });
+
+        // A real ob_flush() pushes the active buffer down a level, so an outer
+        // buffer captures everything the loop flushes out of the inner one.
+        ob_start();
+        ob_start();
+        $response->sendContent();
+        ob_end_flush();
+        $content = (string) ob_get_clean();
+
+        self::assertSame(StreamTerminationReason::MAX_ITERATIONS, $stream->endReason);
         self::assertSame(":\n\nevent: update\ndata: {\"tick\":1}\n\n", $content);
     }
 }
