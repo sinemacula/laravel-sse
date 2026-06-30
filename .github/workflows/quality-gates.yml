@@ -38,10 +38,10 @@ defaults:
 jobs:
 
     # ==========================================================================
-    # JOB: SCOPED MUTATION GATE (PR + PUSH)
+    # JOB: SCOPED MUTATION GATE (PR)
     # ==========================================================================
     mutation:
-        if: ${{ github.event_name != 'schedule' }}
+        if: ${{ github.event_name == 'pull_request' }}
         name: Mutation / PHP 8.3
         runs-on: ubuntu-latest
 
@@ -50,11 +50,16 @@ jobs:
                 uses: actions/checkout@v5
                 with:
                     persist-credentials: false
+                    fetch-depth: 0
+
+            -   name: Fetch base branch for the diff
+                run: git fetch --no-tags origin master
 
             -   name: Setup PHP
                 uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
                 with:
                     php-version: 8.3
+                    coverage: pcov
 
             -   name: Scoped mutation gate
                 run: composer test:mutation
@@ -78,6 +83,7 @@ jobs:
                 uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
                 with:
                     php-version: 8.3
+                    coverage: pcov
 
             -   name: Full mutation suite
                 run: composer test:mutation:full
