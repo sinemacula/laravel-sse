@@ -72,10 +72,10 @@
             "@php vendor/bin/paratest --coverage-clover=clover.xml"
         ],
         "test:mutation": [
-            "@php vendor/bin/infection --configuration=infection.json5 --only-covering-test-cases --min-msi=100 --min-covered-msi=100"
+            "@php vendor/bin/infection --configuration=infection.json5 --only-covering-test-cases --threads=max --git-diff-lines --git-diff-base=origin/master --map-source-class-to-test --min-msi=100 --min-covered-msi=100"
         ],
         "test:mutation:full": [
-            "@php vendor/bin/infection --configuration=infection.full.json5 --only-covering-test-cases"
+            "@php vendor/bin/infection --configuration=infection.full.json5 --only-covering-test-cases --threads=max"
         ],
         "bench": [
             "@php vendor/bin/phpbench run benchmarks --config=phpbench.json --progress=plain --report=aggregate"
