@@ -38,10 +38,10 @@ defaults:
 jobs:
 
     # ==========================================================================
-    # JOB: SCOPED MUTATION GATE (PR)
+    # JOB: SCOPED MUTATION GATE (PR + PUSH)
     # ==========================================================================
     mutation:
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name != 'schedule' }}
         name: Mutation / PHP 8.3
         runs-on: ubuntu-latest
 
@@ -65,10 +65,10 @@ jobs:
                 run: composer test:mutation
 
     # ==========================================================================
-    # JOB: FULL MUTATION SUITE (PUSH + SCHEDULED + MANUAL)
+    # JOB: FULL MUTATION SUITE (SCHEDULED + MANUAL)
     # ==========================================================================
     mutation-full:
-        if: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         continue-on-error: true
         name: Mutation Full / PHP 8.3
         runs-on: ubuntu-latest
