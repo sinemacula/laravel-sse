@@ -65,6 +65,13 @@ jobs:
             -   name: Benchmark smoke
                 run: composer bench:smoke
 
+            -   name: Publish code coverage
+                if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.php == '8.3' }}
+                uses: qltysh/qlty-action/coverage@v2
+                with:
+                    oidc: true
+                    files: clover.xml
+
     # ==========================================================================
     # JOB: LARAVEL TESTS
     # ==========================================================================
@@ -98,14 +105,7 @@ jobs:
                 run: composer update --with="laravel/framework:${LARAVEL_CONSTRAINT}" --prefer-dist --no-interaction --no-progress
 
             -   name: PHPUnit
-                run: composer test:coverage
+                run: composer test
 
             -   name: Benchmark smoke
                 run: composer bench:smoke
-
-            -   name: Publish code coverage
-                if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.laravel.label == '13' }}
-                uses: qltysh/qlty-action/coverage@v2
-                with:
-                    oidc: true
-                    files: clover.xml
