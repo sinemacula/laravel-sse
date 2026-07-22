@@ -37,32 +37,16 @@ defaults:
 jobs:
 
     # ==========================================================================
-    # JOB: TESTS
+    # JOB: PHP TESTS
     # ==========================================================================
-    tests:
-        name: Test / PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel.label }}
+    php:
+        name: Test / PHP ${{ matrix.php }}
         runs-on: ubuntu-latest
 
         strategy:
             fail-fast: false
             matrix:
-                include:
-                    -   php: 8.3
-                        laravel:
-                            constraint: ^12.0
-                            label: 12
-                    -   php: 8.4
-                        laravel:
-                            constraint: ^12.0
-                            label: 12
-                    -   php: 8.5
-                        laravel:
-                            constraint: ^12.0
-                            label: 12
-                    -   php: 8.3
-                        laravel:
-                            constraint: ^13.0
-                            label: 13
+                php: [ 8.3, 8.4, 8.5 ]
 
         steps:
             -   name: Checkout
@@ -74,6 +58,39 @@ jobs:
                 uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
                 with:
                     php-version: ${{ matrix.php }}
+
+            -   name: PHPUnit
+                run: composer test:coverage
+
+            -   name: Benchmark smoke
+                run: composer bench:smoke
+
+    # ==========================================================================
+    # JOB: LARAVEL TESTS
+    # ==========================================================================
+    laravel:
+        name: Test / Laravel ${{ matrix.laravel.label }}
+        runs-on: ubuntu-latest
+
+        strategy:
+            fail-fast: false
+            matrix:
+                laravel:
+                    -   constraint: ^12.0
+                        label: 12
+                    -   constraint: ^13.0
+                        label: 13
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v5
+                with:
+                    persist-credentials: false
+
+            -   name: Setup PHP
+                uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
+                with:
+                    php-version: 8.3
 
             -   name: Pin Laravel version
                 env:
