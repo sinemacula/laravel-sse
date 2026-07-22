@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/sinemacula/laravel-sse/compare/v1.0.0...v1.1.0) (2026-07-22)
+
+
+### Features
+
+* support Laravel 13 ([#28](https://github.com/sinemacula/laravel-sse/issues/28)) ([552c42e](https://github.com/sinemacula/laravel-sse/commit/552c42eccfb30c07e632d4bf4b3e86c8c39e00cd))
+
 ## 1.0.0 (2026-06-25)
 
 
