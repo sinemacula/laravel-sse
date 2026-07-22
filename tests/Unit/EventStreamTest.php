@@ -1070,8 +1070,8 @@ final class EventStreamTest extends TestCase
         $polls  = 0;
         $aborts = 0;
 
-        // The client never aborts; a high backstop prevents a runaway loop
-        // if the cap regresses, so the assertion fails cleanly, not hangs.
+        // The client never aborts; a high backstop prevents a runaway loop if
+        // the cap regresses, so the assertion fails cleanly, not hangs.
         FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
             return ++$aborts >= 1000 ? 1 : 0;
         });
@@ -1506,8 +1506,8 @@ final class EventStreamTest extends TestCase
 
         $aborts = 0;
 
-        // Stay connected through the first poll's two checks, then
-        // disconnect on the next iteration's top check so one sleep is seen.
+        // Stay connected through the first poll's two checks, then disconnect
+        // on the next iteration's top check so one sleep is seen.
         FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
             return ++$aborts >= 3 ? 1 : 0;
         });

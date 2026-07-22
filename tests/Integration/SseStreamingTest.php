@@ -102,9 +102,9 @@ final class SseStreamingTest extends TestCase
     }
 
     /**
-     * Test that the polling loop runs against the real IO primitives - no
-     * faked flush/ob_flush/ob_get_status/sleep/connection_aborted - bounded to
-     * a single iteration, proving it actually flushes a live output buffer and
+     * Test that the polling loop runs against the real IO primitives - no faked
+     * flush/ob_flush/ob_get_status/sleep/connection_aborted - bounded to a
+     * single iteration, proving it actually flushes a live output buffer and
      * self-terminates at the iteration ceiling rather than only making the
      * right decisions around stubbed IO.
      *
