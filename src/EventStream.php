@@ -69,8 +69,8 @@ class EventStream
      * streaming closure that runs the polling loop.
      *
      * Callback arity is detected via reflection: the emitter is passed only
-     * when the callback declares at least one parameter. Detection is purely
-     * by parameter count, so a callback whose first parameter is optional or
+     * when the callback declares at least one parameter. Detection is purely by
+     * parameter count, so a callback whose first parameter is optional or
      * variadic still receives the emitter, while a zero-parameter callback
      * never does.
      *
