@@ -45,7 +45,7 @@ default = true
 [[source]]
 name = "sinemacula"
 repository = "https://github.com/sinemacula/coding-standards"
-tag = "v1.19.0"
+tag = "v1.19.1"
 
 [[plugin]]
 name = "actionlint"
