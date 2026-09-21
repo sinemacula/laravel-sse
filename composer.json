@@ -39,7 +39,7 @@
         "phpunit/phpunit": "^12.5",
         "sinemacula/coding-standards-laravel": "^1.6.0",
         "slevomat/coding-standard": "^8.28",
-        "squizlabs/php_codesniffer": "^4.0"
+        "squizlabs/php_codesniffer": "^3.13.6 || ^4.0.2"
     },
     "autoload": {
         "psr-4": {
