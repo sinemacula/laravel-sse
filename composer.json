@@ -37,7 +37,7 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^12.5",
-        "sinemacula/coding-standards-laravel": "^1.6.1",
+        "sinemacula/coding-standards-laravel": "^1.6.2",
         "slevomat/coding-standard": "^8.28",
         "squizlabs/php_codesniffer": "^3.13.6 || ^4.0.2"
     },
