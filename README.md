@@ -1,4 +1,6 @@
-# Laravel SSE
+<h1 align="center">Laravel SSE</h1>
+
+<div align="center">
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/sinemacula/laravel-sse.svg)](https://packagist.org/packages/sinemacula/laravel-sse)
 [![Build Status](https://github.com/sinemacula/laravel-sse/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/sinemacula/laravel-sse/actions/workflows/tests.yml)
@@ -6,6 +8,8 @@
 [![Maintainability](https://qlty.sh/gh/sinemacula/projects/laravel-sse/maintainability.svg)](https://qlty.sh/gh/sinemacula/projects/laravel-sse)
 [![Code Coverage](https://qlty.sh/gh/sinemacula/projects/laravel-sse/coverage.svg)](https://qlty.sh/gh/sinemacula/projects/laravel-sse)
 [![Total Downloads](https://img.shields.io/packagist/dt/sinemacula/laravel-sse.svg)](https://packagist.org/packages/sinemacula/laravel-sse)
+
+</div>
 
 Server-Sent Events (SSE) streaming primitives for Laravel - an event stream response built around a heartbeat polling
 loop and a typed emitter. Drop the `EventStream` into any class, or mix the `RespondsWithEventStream` trait into a
