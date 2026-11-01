@@ -60,8 +60,22 @@ jobs:
                     php-version: 8.3
                     coverage: pcov
 
+            # On a push, origin/master is the pushed commit itself, so the gate
+            # diffs against the commit master moved from. A push that rewrote
+            # master instead of moving it forward leaves no such base.
             -   name: Scoped mutation gate
-                run: composer test:mutation
+                env:
+                    BEFORE: ${{ github.event.before }}
+                run: |
+                    base=origin/master
+                    if [ "$GITHUB_EVENT_NAME" = push ]; then
+                        if ! git merge-base --is-ancestor "$BEFORE" HEAD 2>/dev/null; then
+                            echo "::error::master did not move forward from ${BEFORE}, so the changed lines are unknown; run the full mutation suite."
+                            exit 1
+                        fi
+                        base=$BEFORE
+                    fi
+                    composer test:mutation -- --git-diff-base="$base"
 
     # ==========================================================================
     # JOB: FULL MUTATION SUITE (SCHEDULED + MANUAL)
