@@ -33,7 +33,7 @@ test_patterns = [
 ]
 
 [runtimes.enabled]
-php = "8.3"
+php = "8.5"
 
 [smells]
 mode = "comment"
@@ -75,25 +75,12 @@ package_filters = ["slevomat", "dealerdirect", "sinemacula"]
 [plugins.definitions.php-codesniffer.drivers.lint]
 success_codes = [0, 1, 2, 3]
 
-# The Symfony components are pinned to the 7.x line because php-cs-fixer 3.90+
-# accepts symfony/console 8, which needs PHP 8.4.1 and uses 8.4-only syntax the
-# PHP 8.3 runner cannot parse. They have to be declared here rather than via a
-# package file: qlty ignores extra_packages whenever package_file is set on the
-# same plugin.
+# The shared standards are declared here rather than via a package file: qlty
+# ignores extra_packages whenever package_file is set on the same plugin.
 [[plugin]]
 name = "php-cs-fixer"
 version = "3.95.25"
-extra_packages = [
-    "sinemacula/coding-standards@1.28.0",
-    "symfony/console@^7.4",
-    "symfony/event-dispatcher@^7.4",
-    "symfony/filesystem@^7.4",
-    "symfony/finder@^7.4",
-    "symfony/options-resolver@^7.4",
-    "symfony/process@^7.4",
-    "symfony/stopwatch@^7.4",
-    "symfony/string@^7.4",
-]
+extra_packages = ["sinemacula/coding-standards@1.28.0"]
 
 [[plugin]]
 name = "phpstan"
