@@ -33,7 +33,7 @@ final class EmitterTest extends TestCase
     {
         parent::setUp();
 
-        FunctionOverrides::set('flush', fn () => null);
+        FunctionOverrides::setFlush(fn () => null);
 
         $this->emitter = new Emitter;
     }
@@ -271,7 +271,7 @@ final class EmitterTest extends TestCase
     {
         $flushCalled = false;
 
-        FunctionOverrides::set('flush', function () use (&$flushCalled): void {
+        FunctionOverrides::setFlush(function () use (&$flushCalled): void {
             $flushCalled = true;
         });
 
@@ -291,7 +291,7 @@ final class EmitterTest extends TestCase
     {
         $flushCalled = false;
 
-        FunctionOverrides::set('flush', function () use (&$flushCalled): void {
+        FunctionOverrides::setFlush(function () use (&$flushCalled): void {
             $flushCalled = true;
         });
 
