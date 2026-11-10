@@ -85,6 +85,7 @@ final class EventStreamTest extends TestCase
 
         $cacheControl = $response->headers->get('Cache-Control');
 
+        self::assertIsString($cacheControl);
         self::assertStringContainsString('no-cache', $cacheControl);
         self::assertStringContainsString('no-transform', $cacheControl);
         self::assertSame('keep-alive', $response->headers->get('Connection'));
