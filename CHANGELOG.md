@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/sinemacula/laravel-sse/compare/v1.1.0...v1.1.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* clear the qlty findings and drop configuration the shared source provides ([#69](https://github.com/sinemacula/laravel-sse/issues/69)) ([f403339](https://github.com/sinemacula/laravel-sse/commit/f403339e3f1a725a314e849a83656a922c090b0c))
+
 ## [1.1.0](https://github.com/sinemacula/laravel-sse/compare/v1.0.0...v1.1.0) (2026-07-22)
 
 
