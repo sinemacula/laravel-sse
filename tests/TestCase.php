@@ -53,7 +53,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         $this->monotonicClock = $originSeconds * self::NS_PER_SECOND;
 
-        FunctionOverrides::set('hrtime', fn (): int => $this->monotonicClock);
+        FunctionOverrides::setHrtime(fn (): int => $this->monotonicClock);
     }
 
     /**

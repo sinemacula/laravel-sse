@@ -40,11 +40,11 @@ final class RespondsWithEventStreamTest extends TestCase
     {
         parent::setUp();
 
-        FunctionOverrides::set('flush', fn () => null);
-        FunctionOverrides::set('ob_flush', fn () => null);
-        FunctionOverrides::set('ob_get_status', fn (): array => []);
-        FunctionOverrides::set('sleep', fn () => 0);
-        FunctionOverrides::set('connection_aborted', fn (): int => 1);
+        FunctionOverrides::setFlush(fn () => null);
+        FunctionOverrides::setObFlush(fn () => null);
+        FunctionOverrides::setObGetStatus(fn (): array => []);
+        FunctionOverrides::setSleep(fn () => 0);
+        FunctionOverrides::setConnectionAborted(fn (): int => 1);
     }
 
     /**
@@ -98,13 +98,13 @@ final class RespondsWithEventStreamTest extends TestCase
     {
         $abortCount = 0;
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
+        FunctionOverrides::setConnectionAborted(function () use (&$abortCount): int {
             return ++$abortCount >= 3 ? 1 : 0;
         });
 
         $sleepArgs = [];
 
-        FunctionOverrides::set('sleep', function (int $seconds) use (&$sleepArgs): int {
+        FunctionOverrides::setSleep(function (int $seconds) use (&$sleepArgs): int {
             $sleepArgs[] = $seconds;
 
             return 0;
@@ -130,7 +130,7 @@ final class RespondsWithEventStreamTest extends TestCase
     {
         $this->fakeMonotonicClock();
 
-        FunctionOverrides::set('connection_aborted', fn (): int => 0);
+        FunctionOverrides::setConnectionAborted(fn (): int => 0);
 
         // Bound to a single poll via the iteration ceiling so the count is
         // deterministic without depending on the loop's abort-check cadence.
@@ -167,7 +167,7 @@ final class RespondsWithEventStreamTest extends TestCase
     {
         $this->fakeMonotonicClock();
 
-        FunctionOverrides::set('connection_aborted', fn (): int => 0);
+        FunctionOverrides::setConnectionAborted(fn (): int => 0);
 
         // Bound to a single poll via the iteration ceiling so the count is
         // deterministic without depending on the loop's abort-check cadence.
@@ -207,7 +207,7 @@ final class RespondsWithEventStreamTest extends TestCase
         $polls  = 0;
         $aborts = 0;
 
-        FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
+        FunctionOverrides::setConnectionAborted(function () use (&$aborts): int {
             return ++$aborts >= 5 ? 1 : 0;
         });
 
@@ -237,7 +237,7 @@ final class RespondsWithEventStreamTest extends TestCase
     {
         $this->fakeMonotonicClock();
 
-        FunctionOverrides::set('connection_aborted', fn (): int => 0);
+        FunctionOverrides::setConnectionAborted(fn (): int => 0);
 
         $harness = new class extends RespondsWithEventStreamHarness {
             /**
@@ -284,7 +284,7 @@ final class RespondsWithEventStreamTest extends TestCase
         $polls  = 0;
         $aborts = 0;
 
-        FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
+        FunctionOverrides::setConnectionAborted(function () use (&$aborts): int {
             return ++$aborts >= 1000 ? 1 : 0;
         });
 
@@ -323,7 +323,7 @@ final class RespondsWithEventStreamTest extends TestCase
         $polls  = 0;
         $aborts = 0;
 
-        FunctionOverrides::set('connection_aborted', function () use (&$aborts): int {
+        FunctionOverrides::setConnectionAborted(function () use (&$aborts): int {
             return ++$aborts >= 1000 ? 1 : 0;
         });
 

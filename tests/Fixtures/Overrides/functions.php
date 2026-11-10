@@ -15,11 +15,10 @@ use Tests\Fixtures\Support\FunctionOverrides;
  */
 function connection_aborted(): int
 {
-    $override = FunctionOverrides::get('connection_aborted');
+    $override = FunctionOverrides::getConnectionAborted();
 
     if ($override !== null) {
-        // @phpstan-ignore cast.int
-        return (int) $override();
+        return $override();
     }
 
     return \connection_aborted();
@@ -33,11 +32,10 @@ function connection_aborted(): int
  */
 function sleep(int $seconds): int
 {
-    $override = FunctionOverrides::get('sleep');
+    $override = FunctionOverrides::getSleep();
 
     if ($override !== null) {
-        // @phpstan-ignore cast.int
-        return (int) $override($seconds);
+        return $override($seconds);
     }
 
     return \sleep($seconds);
@@ -50,7 +48,7 @@ function sleep(int $seconds): int
  */
 function flush(): void
 {
-    $override = FunctionOverrides::get('flush');
+    $override = FunctionOverrides::getFlush();
 
     if ($override !== null) {
         $override();
@@ -69,7 +67,7 @@ function flush(): void
  */
 function ob_flush(): void
 {
-    $override = FunctionOverrides::get('ob_flush');
+    $override = FunctionOverrides::getObFlush();
 
     if ($override !== null) {
         $override();
@@ -88,10 +86,9 @@ function ob_flush(): void
  */
 function ob_get_status(): array
 {
-    $override = FunctionOverrides::get('ob_get_status');
+    $override = FunctionOverrides::getObGetStatus();
 
     if ($override !== null) {
-        // @phpstan-ignore return.type
         return $override();
     }
 
@@ -109,11 +106,10 @@ function ob_get_status(): array
  */
 function hrtime(bool $asNumber = true): int
 {
-    $override = FunctionOverrides::get('hrtime');
+    $override = FunctionOverrides::getHrtime();
 
     if ($override !== null) {
-        // @phpstan-ignore cast.int
-        return (int) $override($asNumber);
+        return $override($asNumber);
     }
 
     return \hrtime(true);

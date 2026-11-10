@@ -45,14 +45,14 @@ final class SseStreamingTest extends TestCase
 
         Route::get(self::SSE_URI, [TestingSseController::class, 'stream']);
 
-        FunctionOverrides::set('flush', fn () => null);
-        FunctionOverrides::set('ob_flush', fn () => null);
-        FunctionOverrides::set('ob_get_status', fn (): array => []);
-        FunctionOverrides::set('sleep', fn () => 0);
+        FunctionOverrides::setFlush(fn () => null);
+        FunctionOverrides::setObFlush(fn () => null);
+        FunctionOverrides::setObGetStatus(fn (): array => []);
+        FunctionOverrides::setSleep(fn () => 0);
 
         $abortCount = 0;
 
-        FunctionOverrides::set('connection_aborted', function () use (&$abortCount): int {
+        FunctionOverrides::setConnectionAborted(function () use (&$abortCount): int {
             return ++$abortCount >= 2 ? 1 : 0;
         });
     }

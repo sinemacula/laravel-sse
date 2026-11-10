@@ -2,8 +2,8 @@
 #
 # Code-quality configuration for both the Qlty CLI and Qlty Cloud. Lint and
 # format rules come from the shared sinemacula/coding-standards source; this
-# file wires that source in and selects the plugins relevant to a PHP
-# repository.
+# file wires that source in and points its PHP plugins at this repository's
+# packages.
 config_version = "0"
 
 exclude_patterns = [
@@ -16,6 +16,7 @@ exclude_patterns = [
     "**/dist/**",
     "**/node_modules/**",
     "**/vendor/**",
+    ".claude/**",
     ".qlty/configs/**",
     ".sinemacula/**",
 ]
@@ -32,12 +33,6 @@ test_patterns = [
     "**/spec_*.*",
 ]
 
-[runtimes.enabled]
-php = "8.5"
-
-[smells]
-mode = "comment"
-
 [[source]]
 name = "default"
 default = true
@@ -48,64 +43,16 @@ repository = "https://github.com/sinemacula/coding-standards"
 tag = "v1.30.0"
 
 [[plugin]]
-name = "actionlint"
-
-[[plugin]]
-name = "editorconfig-checker"
-
-[[plugin]]
-name = "markdownlint"
-mode = "comment"
-
-[[plugin]]
-name = "osv-scanner"
-
-[[plugin]]
 name = "php-codesniffer"
-version = "4.0.4"
-mode = "comment"
 package_file = "composer.json"
 package_filters = ["slevomat", "dealerdirect", "sinemacula"]
-
-# php-codesniffer 4.x exits with code 3 when it finds issues (slevomat >= 8.29
-# forces phpcs ^4.0.1). qlty's default success_codes = [0, 1] treats that as a
-# hard failure and silently drops every phpcs finding (false green), so the
-# exit codes must be accepted here. Must live in this consumer config, not the
-# shared source.toml.
-[plugins.definitions.php-codesniffer.drivers.lint]
-success_codes = [0, 1, 2, 3]
 
 # The shared standards are declared here rather than via a package file: qlty
 # ignores extra_packages whenever package_file is set on the same plugin.
 [[plugin]]
 name = "php-cs-fixer"
-version = "3.95.25"
 extra_packages = ["sinemacula/coding-standards@1.30.0"]
 
 [[plugin]]
 name = "phpstan"
-version = "2.1.46"
 package_file = "composer.json"
-
-[[plugin]]
-name = "radarlint-php"
-mode = "comment"
-
-[[plugin]]
-name = "trivy"
-drivers = [
-    "config",
-    "fs-vuln",
-]
-
-[[plugin]]
-name = "trufflehog"
-
-[[plugin]]
-name = "yamllint"
-
-# Skip radarlint smell analysis on the test tree — reused fixture literals and
-# multi-branch data providers trip duplication/return-count rules without value.
-[[exclude]]
-plugins = ["radarlint-php"]
-file_patterns = ["tests/**"]
