@@ -45,7 +45,7 @@ default = true
 [[source]]
 name = "sinemacula"
 repository = "https://github.com/sinemacula/coding-standards"
-tag = "v1.29.0"
+tag = "v1.30.0"
 
 [[plugin]]
 name = "actionlint"
@@ -80,7 +80,7 @@ success_codes = [0, 1, 2, 3]
 [[plugin]]
 name = "php-cs-fixer"
 version = "3.95.25"
-extra_packages = ["sinemacula/coding-standards@1.29.0"]
+extra_packages = ["sinemacula/coding-standards@1.30.0"]
 
 [[plugin]]
 name = "phpstan"
