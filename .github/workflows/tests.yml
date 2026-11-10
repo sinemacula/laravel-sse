@@ -50,12 +50,12 @@ jobs:
 
         steps:
             -   name: Checkout
-                uses: actions/checkout@v5
+                uses: actions/checkout@v7
                 with:
                     persist-credentials: false
 
             -   name: Setup PHP
-                uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
+                uses: sinemacula/.github/.github/actions/setup-php@v2.0.0
                 with:
                     php-version: ${{ matrix.php }}
 
@@ -90,12 +90,12 @@ jobs:
 
         steps:
             -   name: Checkout
-                uses: actions/checkout@v5
+                uses: actions/checkout@v7
                 with:
                     persist-credentials: false
 
             -   name: Setup PHP
-                uses: sinemacula/.github/.github/actions/setup-php@v1.1.1
+                uses: sinemacula/.github/.github/actions/setup-php@v2.0.0
                 with:
                     php-version: 8.3
 
