@@ -40,7 +40,7 @@ default = true
 [[source]]
 name = "sinemacula"
 repository = "https://github.com/sinemacula/coding-standards"
-tag = "v1.30.0"
+tag = "v1.30.1"
 
 [[plugin]]
 name = "php-codesniffer"
@@ -51,7 +51,7 @@ package_filters = ["slevomat", "dealerdirect", "sinemacula"]
 # ignores extra_packages whenever package_file is set on the same plugin.
 [[plugin]]
 name = "php-cs-fixer"
-extra_packages = ["sinemacula/coding-standards@1.30.0"]
+extra_packages = ["sinemacula/coding-standards@1.30.1"]
 
 [[plugin]]
 name = "phpstan"
