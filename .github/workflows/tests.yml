@@ -55,7 +55,7 @@ jobs:
                     persist-credentials: false
 
             -   name: Setup PHP
-                uses: sinemacula/.github/.github/actions/setup-php@v2.0.0
+                uses: sinemacula/.github/.github/actions/setup-php@v3.0.1
                 with:
                     php-version: ${{ matrix.php }}
 
@@ -95,7 +95,7 @@ jobs:
                     persist-credentials: false
 
             -   name: Setup PHP
-                uses: sinemacula/.github/.github/actions/setup-php@v2.0.0
+                uses: sinemacula/.github/.github/actions/setup-php@v3.0.1
                 with:
                     php-version: 8.3
 

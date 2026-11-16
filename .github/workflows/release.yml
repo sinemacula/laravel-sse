@@ -37,7 +37,7 @@ jobs:
     # JOB: RELEASE
     # ==========================================================================
     release:
-        uses: sinemacula/.github/.github/workflows/release.yml@v2.0.0
+        uses: sinemacula/.github/.github/workflows/release.yml@v3.0.1
         secrets: inherit
         with:
             use-app-token: true
